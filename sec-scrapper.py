@@ -9,7 +9,7 @@ import os
 import requests, zipfile, io
 import urllib
 from bs4 import BeautifulSoup
-from tqdm import tqdm_notebook
+from tqdm import tqdm
 import multiprocessing as mp
 from datetime import datetime
 import time
@@ -183,7 +183,7 @@ download_stats = {
     'count_downloaded': 0
 }  # Number of files, bytes
 
-for n, filepath in enumerate(tqdm_notebook(info['path_master_zip'])):
+for n, filepath in enumerate(tqdm(info['path_master_zip'])):
     # Check if that zip has already been downloaded
     # print(filepath, is_downloaded(filepath))
     # assert 0
@@ -236,7 +236,7 @@ if len(files_to_unzip):
     # Launch a pool of workers
     pool = mp.Pool(min(mp.cpu_count(), len(files_to_unzip)))
     #pool.map(unzip_file, files_to_unzip, chunksize=1)
-    r = list(tqdm_notebook(pool.imap(unzip_file, files_to_unzip, chunksize=1), total=len(files_to_unzip)))
+    r = list(tqdm(pool.imap(unzip_file, files_to_unzip, chunksize=1), total=len(files_to_unzip)))
     pool.close()
     t1 = time.perf_counter()
     size_unzipped = download_stats['bytes_downloaded']//2**20
@@ -300,7 +300,7 @@ if len(info['path_master_idx']):
             doc_of_interest[key].append(parsed_index[key])
         # Now, doc_of_interest has a lists of lists of data
         
-    #r = list(tqdm_notebook(pool.imap(parse_index, list_master_idx, chunksize=1), total=len(list_master_idx)))
+    #r = list(tqdm(pool.imap(parse_index, list_master_idx, chunksize=1), total=len(list_master_idx)))
     #pool.close()
     #print(r)
     
@@ -405,7 +405,7 @@ def doc_url_to_FilingSummary_url(end_url):
 # Generate the list of local path
 general_path = {key: [] for key in doc_types}
 for file_type in doc_types:
-    for entry in tqdm_notebook(general_url[file_type]):
+    for entry in tqdm(general_url[file_type]):
         general_path[file_type].append(doc_url_to_filepath(*entry))
     assert len(general_path[file_type]) == len(general_url[file_type])
 
@@ -434,7 +434,7 @@ download_stats = {
 last_request = time.perf_counter()  # Initialize this counter
 for file_type in doc_types:
     counter = 0
-    for entry in tqdm_notebook(general_url[file_type]):
+    for entry in tqdm(general_url[file_type]):
         if counter < max_download:
             path_doc_old = doc_url_to_filepath(*entry)  # [TBR]
             path_doc = general_path[file_type][counter]
