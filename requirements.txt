@@ -1,0 +1,7 @@
+requests, zipfile, io
+urllib
+bs4
+tqdm
+matplotlib>=3
+vaderSentiment
+numpy>=1.16
