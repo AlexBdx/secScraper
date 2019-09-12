@@ -423,7 +423,7 @@ for key in general_path:
 # In[23]:
 
 
-max_download = 3  # Of each type
+max_download = 100  # Of each type
 min_time_between_requests = 0.1  # [s]
 download_stats = {
     'bytes_downloaded': 0,
