@@ -337,7 +337,7 @@ def parse_index(path, doc_types):
     # This method is bound to be run in parallel
     # Parses one master index and returns the URL of all the interesting documents in a dictionary
     docs = {key: [] for key in doc_types}  # Initialize an empty partial dictionary
-    with open(path) as f:
+    with open(path, 'r', encoding="utf8", errors='ignore') as f:
         data = csv.reader(f, delimiter='|')
         
         for _ in range(11):  # Jump to line 12
