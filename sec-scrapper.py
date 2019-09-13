@@ -9,7 +9,7 @@ import os
 import requests, zipfile, io
 import urllib
 from bs4 import BeautifulSoup
-from tqdm import tqdm
+from tqdm import tqdm_notebook, tqdm
 import multiprocessing as mp
 from datetime import datetime
 import time
@@ -21,13 +21,32 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import numpy as np
 
 
-# In[2]:
+# In[35]:
 
 
+"""Set up the working path"""
 home = os.path.expanduser("~")
-path_master_indexes = os.path.join(home, 'Desktop/data/master_indexes')
-path_daily_data = os.path.join(home, 'Desktop/data/daily_data')
+project_root = os.path.join(home, 'Desktop/data')
+
+path_master_indexes = os.path.join(project_root, 'master_indexes')
+path_daily_data = os.path.join(project_root, 'daily_data')
+path_error_log = os.path.join(project_root, 'errors.log')
 base_url = "https://www.sec.gov/Archives/"
+
+# Check that the folder structure exists and we have the permission to write on it
+def test_setup_work_directory():
+    path_temp_file = os.path.join(project_root, 'temp_test_setup_work_directory.temp')
+    with open(path_temp_file, 'w') as f:
+        pass
+    os.remove(path_temp_file)
+    return True
+
+test_setup_work_directory()
+
+
+# In[3]:
+
+
 verbose = False
 
 
@@ -35,7 +54,7 @@ verbose = False
 
 # ### Time range
 
-# In[3]:
+# In[4]:
 
 
 # Specify the start and finish of the data collection
@@ -46,7 +65,7 @@ time_range = [(2018, 1), (2018, 4)]
 
 # ### Documents of interests
 
-# In[4]:
+# In[5]:
 
 
 doc_types = [
@@ -56,7 +75,7 @@ doc_types = [
 ]
 
 
-# In[5]:
+# In[6]:
 
 
 info = {}
@@ -64,7 +83,7 @@ info = {}
 
 # ## Create the list of master indexes to download
 
-# In[6]:
+# In[7]:
 
 
 def create_qtr_list(time_range):
@@ -95,15 +114,49 @@ def create_qtr_list(time_range):
     assert list_qtr[-1] == time_range[1]
     return list_qtr
 
+def test_create_qtr_list():
+    test_1 = create_qtr_list([(2018, 1), (2018, 4)])
+    assert test_1 == [(2018, 1), (2018, 2), (2018, 3), (2018, 4)]
+    test_2 = create_qtr_list([(2016, 2), (2017, 3)])
+    assert test_2 == [(2016, 2), (2016, 3), (2016, 4), (2017, 1), (2017, 2), (2017, 3)]
+    return True
+test_create_qtr_list()
 
-# In[7]:
+
+# In[8]:
 
 
 info['quarters'] = create_qtr_list(time_range)
 info['quarters']
 
 
-# In[8]:
+# In[9]:
+
+
+def yearly_qtr_list(time_range):
+    year_list = []
+    if time_range[0][0] == time_range[1][0]:
+        year_list = create_qtr_list(time_range)
+    else:
+        for year in range(time_range[0][0], time_range[1][0]+1):
+            if year == time_range[0][0]:
+                year_list.append(create_qtr_list([(year, time_range[0][1]), (year, 4)]))
+            elif year == time_range[1][0]:
+                year_list.append(create_qtr_list([(year, 1), (year, time_range[1][1])]))
+            else:
+                year_list.append(create_qtr_list([(year, 1), (year, 4)]))
+    return year_list
+
+def test_yearly_qtr_list():
+    test_1 = yearly_qtr_list([(2016, 2), (2016, 2)])
+    assert test_1 == [(2016, 2)]
+    test_2 = yearly_qtr_list([(2015, 2), (2016, 3)])
+    assert test_2 == [[(2015, 2), (2015, 3), (2015, 4)], [(2016, 1), (2016, 2), (2016, 3)]]
+    return True
+test_yearly_qtr_list()
+
+
+# In[10]:
 
 
 # Build the URL for the master index of a given quarter
@@ -113,7 +166,7 @@ def qtr_to_master_url(qtr):
     return '{}/{}/QTR{}/master.zip'.format(url, qtr[0], qtr[1])
 
 
-# In[9]:
+# In[11]:
 
 
 def master_url_to_filepath(url):
@@ -121,7 +174,7 @@ def master_url_to_filepath(url):
     return os.path.join(path_master_indexes, qtr[6], qtr[7], 'master.zip')
 
 
-# In[10]:
+# In[12]:
 
 
 def create_list_url_master_zip(list_qtr):
@@ -134,7 +187,7 @@ def create_list_url_master_zip(list_qtr):
     return list_master_idx
 
 
-# In[11]:
+# In[13]:
 
 
 info['url_master_zip'] = create_list_url_master_zip(info['quarters'])
@@ -143,7 +196,7 @@ info['url_master_zip']
 
 # ## Download all the master indexes as zip files
 
-# In[12]:
+# In[14]:
 
 
 def is_downloaded(filepath):
@@ -155,8 +208,20 @@ def is_downloaded(filepath):
             os.makedirs(os.path.split(filepath)[0])
         return False
 
+def test_is_downloaded():
+    test_1 = is_downloaded("/ahsbxaksjhbxhjx.txt")
+    assert test_1 == False
+    path_temp_file = os.path.join(home, "temp_test_is_downloaded.temp")
+    with open(path_temp_file, 'w') as f:
+        pass
+    test_2 = is_downloaded(path_temp_file)
+    os.remove(path_temp_file)
+    assert test_2 == True
+    return True
+test_is_downloaded()
 
-# In[13]:
+
+# In[15]:
 
 
 info['path_master_zip'] = []
@@ -174,7 +239,7 @@ info['path_master_zip']  # list of all the zips we need
 #             os.makedirs(os.path.split(expected_path)[0])
 #         return False
 
-# In[14]:
+# In[16]:
 
 
 """Verify that the master index zip are present. If not, download it."""
@@ -204,7 +269,7 @@ print(download_stats)
 
 # ## Unzip all the master indexes
 
-# In[15]:
+# In[17]:
 
 
 # Create an unzipping function to be run by a pool of workers
@@ -213,7 +278,7 @@ def unzip_file(path):
         zip_ref.extractall(os.path.split(path)[0])
 
 
-# In[16]:
+# In[18]:
 
 
 # 1. Build the list of zip files to extract
@@ -250,7 +315,7 @@ info['path_master_idx']
 
 # ## Parse all the indexes
 
-# In[17]:
+# In[19]:
 
 
 def parse_index(path, doc_types):
@@ -272,7 +337,7 @@ def parse_index(path, doc_types):
     return docs
 
 
-# In[18]:
+# In[20]:
 
 
 # 1. Build the list of files to download based on the parsing
@@ -300,7 +365,7 @@ if len(info['path_master_idx']):
             doc_of_interest[key].append(parsed_index[key])
         # Now, doc_of_interest has a lists of lists of data
         
-    #r = list(tqdm(pool.imap(parse_index, list_master_idx, chunksize=1), total=len(list_master_idx)))
+    #r = list(tqdm_notebook(pool.imap(parse_index, list_master_idx, chunksize=1), total=len(list_master_idx)))
     #pool.close()
     #print(r)
     
@@ -332,36 +397,36 @@ for key in general_url:
 
 # ## Download the documents of interest
 
-# In[19]:
-
-if verbose:
-    """Display how many documents are available for that time period"""
-    # Do some stats on the document dates as a sanity check
-    # Calculate the number of documents per date
-    stats = {}
-    for key in general_url:
-        for entry in general_url[key]:
-            datetime_date = datetime.strptime(entry[0], '%Y%m%d')
-            try:
-                stats[datetime_date] += 1
-            except:
-                stats[datetime_date] = 1
-
-    assert sum(stats.values()) == sum(nb_url.values())
+# In[21]:
 
 
-    # Sort the list for plotting and display
-    lists = sorted(stats.items()) # sorted by key, return a list of tuples
-    x, y = zip(*lists) # unpack a list of pairs into two tuples
+"""Display how many documents are available for that time period"""
+# Do some stats on the document dates as a sanity check
+# Calculate the number of documents per date
+stats = {}
+for key in general_url:
+    for entry in general_url[key]:
+        datetime_date = datetime.strptime(entry[0], '%Y%m%d')
+        try:
+            stats[datetime_date] += 1
+        except:
+            stats[datetime_date] = 1
 
-    plt.figure(figsize=(15, 5))
-    dates = matplotlib.dates.date2num(x)
-    plt.plot_date(dates, y)
-    plt.title("Historical repartition of relevant documents\nTotal count: {:,} | {} to {}"
-              .format(sum(stats.values()), time_range[0], time_range[1]), fontsize=20)
-    plt.ylabel('Document count [-]', fontsize=16)
-    plt.xlabel('Date [-]', fontsize=16)
-    plt.show()
+assert sum(stats.values()) == sum(nb_url.values())
+
+
+# Sort the list for plotting and display
+lists = sorted(stats.items()) # sorted by key, return a list of tuples
+x, y = zip(*lists) # unpack a list of pairs into two tuples
+
+plt.figure(figsize=(15, 5))
+dates = matplotlib.dates.date2num(x)
+plt.plot_date(dates, y)
+plt.title("Historical repartition of relevant documents\nTotal count: {:,} | {} to {}"
+          .format(sum(stats.values()), time_range[0], time_range[1]), fontsize=20)
+plt.ylabel('Document count [-]', fontsize=16)
+plt.xlabel('Date [-]', fontsize=16)
+plt.show()
 
 
 # def is_downloaded(filepath):
@@ -373,7 +438,7 @@ if verbose:
 #             os.makedirs(os.path.split(filepath)[0])
 #         return False
 
-# In[20]:
+# In[22]:
 
 
 def doc_url_to_filepath(submission_date, end_url):
@@ -387,7 +452,7 @@ def doc_url_to_filepath(submission_date, end_url):
     return os.path.join(path_daily_data, submission_date, cik, submission_id+'.html')
 
 
-# In[21]:
+# In[23]:
 
 
 def doc_url_to_FilingSummary_url(end_url):
@@ -399,7 +464,7 @@ def doc_url_to_FilingSummary_url(end_url):
     return final_url
 
 
-# In[22]:
+# In[24]:
 
 
 # Generate the list of local path
@@ -420,66 +485,135 @@ for key in general_path:
         print(general_path[key][k])
 
 
-# In[23]:
+# In[36]:
 
 
-max_download = 100  # Of each type
+def display_download_stats(stats):
+    """
+    Just a better way to display the downloading stats rather than dumping the dict"""
+    text = []
+    for key in stats:
+        text.append(key + ": {:,}".format(stats[key]))   
+    print("[INFO] " + " | ".join(text))
+
+
+# In[37]:
+
+
+max_download = np.inf # No more download limits
 min_time_between_requests = 0.1  # [s]
 download_stats = {
     'bytes_downloaded': 0,
-    'count_downloaded': 0
+    'count_downloaded': 0,
+    'download_failed': 0,
+    'free_space': os.statvfs(project_root).f_frsize * os.statvfs(project_root).f_bavail
 }  # Number of files, bytes
 
+# Reset any log file that could exist
+try:
+    os.remove(path_error_log)
+except FileNotFoundError:
+    pass
 
-last_request = time.perf_counter()  # Initialize this counter
-for file_type in doc_types:
-    counter = 0
-    for entry in tqdm(general_url[file_type]):
-        if counter < max_download:
-            path_doc_old = doc_url_to_filepath(*entry)  # [TBR]
-            path_doc = general_path[file_type][counter]
-            assert path_doc == path_doc_old
-            #general_path[file_type].append(path_doc)
-            
-            """[OPTIONAL] Download the FilingSummary when it exists"""
-            """
-            if file_type == '10-K' or file_type == '10-Q':
-                # A filing summary *might* be available
-                # 1. Check if the FilingSummary has already been downloaded
-                path_filing_summary = path_doc[:-3] + '-index.xml'
-                if not is_downloaded(path_filing_summary):
-                    url_filing_summary = doc_url_to_FilingSummary_url(entry[1])
-                    print("Final URL:", url_filing_summary)
-                    (filename, headers) = urllib.request.urlretrieve(url_file_index, filepath)
-                    print((filename, headers))
+# Ugly with statement to contain the stream to an error and automatically close it afterward
+with open(path_error_log, 'a') as f:
+    last_request = 0  # Initialize this timer
+    for file_type in doc_types:
+        counter = 0
+        for entry in tqdm(general_url[file_type]):
+            if counter < max_download:
+                path_doc_old = doc_url_to_filepath(*entry)  # [TBR]
+                path_doc = general_path[file_type][counter]
+                assert path_doc == path_doc_old
+
+                # Check if the file has already been downloaded
+                if not is_downloaded(path_doc):
+                    url_doc = base_url + entry[1]
+                    elapsed_since_last_requests = time.perf_counter() - last_request
+                    if elapsed_since_last_requests < min_time_between_requests:
+                        print("[WARNING] Will wait for {:.3f} s"
+                              .format(min_time_between_requests - elapsed_since_last_requests))
+                        time.sleep(min_time_between_requests - elapsed_since_last_requests)
+                    if verbose:
+                        print("[INFO] Time since last request: {:.3f} s".format(elapsed_since_last_requests))
+                    last_request = time.perf_counter()
+                    try:
+                        (filename, headers) = urllib.request.urlretrieve(url_doc, path_doc)
+                    except:
+                        dt_string = datetime.now().strftime("%Y%m%d_%H:%M:%S")
+                        error_message = "[ERROR] [{}] URL {} could not be downloaded".format(dt_string, url_doc)
+                        f.write(error_message + "\n")  # For later read
+                        print(error_message)  # For user is terminal is connected
+                        download_stats['download_failed'] += 1
+                        continue
+
+                    download_time = time.perf_counter() - last_request
+                    #print((filename, headers))
+                    downloaded_size = os.path.getsize(path_doc)
+                    download_stats['bytes_downloaded'] += downloaded_size
+                    download_stats['count_downloaded'] += 1
+                    download_stats['free_space'] = os.statvfs(project_root).f_frsize * os.statvfs(project_root).f_bavail
+                    print("[INFO] [{}] Latest download speed: {:,} kb in {:.3f} s ({:,.1f} kb/s)"
+                          .format(file_type, downloaded_size//2**10, download_time, downloaded_size/(2**10*download_time)))
+                    display_download_stats(download_stats)
                 else:
                     if verbose:
-                        print("[WARNING] Document at {} already downloaded".format(url_file_index))
-            """
-            
-            # Check if the file has already been downloaded
-            if not is_downloaded(path_doc):
-                url_doc = base_url + entry[1]
-                elapsed_since_last_requests = time.perf_counter() - last_request
-                if elapsed_since_last_requests < min_time_between_requests:
-                    print("[WARNING] Will wait for {:.3f} s"
-                          .format(min_time_between_requests - elapsed_since_last_requests))
-                    time.sleep(min_time_between_requests - elapsed_since_last_requests)
-                if verbose:
-                    print("[INFO] Time since last request: {:.3f} s".format(elapsed_since_last_requests))
-                last_request = time.perf_counter()
-                (filename, headers) = urllib.request.urlretrieve(url_doc, path_doc)
-                download_time = time.perf_counter() - last_request
-                #print((filename, headers))
-                downloaded_size = os.path.getsize(path_doc)
-                download_stats['bytes_downloaded'] += downloaded_size
-                download_stats['count_downloaded'] += 1
-                print("[INFO] [{}] Latest download speed: {:,} kb in {:.3f} s ({:,.1f} kb/s)"
-                      .format(file_type, downloaded_size//2**10, download_time, downloaded_size/(2**10*download_time)))
+                        print("[WARNING] Document at {} already downloaded".format(path_doc))
             else:
-                if verbose:
-                    print("[WARNING] Document at {} already downloaded".format(path_doc))
+                break
+            counter += 1
+
+
+# ## Parse a doc and run it through the NLP
+
+# ### Parse a doc with Vader
+
+# In[ ]:
+
+
+for file_type in doc_types:
+    counter = 0
+    for entry in tqdm(general_path[file_type]):
+        # print(entry)
+        if counter < max_download:
+            t0 = time.perf_counter()
+            with open(entry) as f:  # Load the file
+                html_doc = f.read()
+            soup = BeautifulSoup(html_doc, 'html.parser')
+            text_only = soup.get_text()
+            t1 = time.perf_counter()
+            print("Before: {:,} byte | After: {:,} byte | Done in: {:.1f} s"
+                  .format(len(html_doc), len(text_only), t1-t0))
+
+            # Get a few subset of the text for analysis
+            average_score = {'neg': 0, 'neu': 0, 'pos': 0, 'compound': 0}
+            length_subset = 10000
+            iterations = 100
+            
+            for _ in range(iterations):
+                if len(text_only) > length_subset:
+                    start_index = np.random.randint(len(text_only)-length_subset)
+                    score = analyser.polarity_scores(text_only[start_index:start_index+length_subset])
+                else:
+                    score = analyser.polarity_scores(text_only)
+                for key in average_score:
+                    average_score[key] += score[key]
+
+            for key in average_score:
+                    average_score[key] /= iterations
+            t2 = time.perf_counter()
+            print(average_score)
+            """
+            print("Took {:.3f} s to analyze {} byte ({} byte/s) | Result: {}"
+                  .format(t2-t1, length_subset*iterations, length_subset*iterations/(t2-t1), average_score))
+            """
         else:
             break
         counter += 1
-download_stats
+
+
+# In[ ]:
+
+
+
+
