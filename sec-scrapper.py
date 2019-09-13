@@ -1,12 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[38]:
-
-
-get_ipython().system('pip install -r requirements.txt')
-
-
 # In[1]:
 
 
