@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+# In[38]:
+
+
+get_ipython().system('pip install -r requirements.txt')
+
+
 # In[1]:
 
 
@@ -19,9 +25,27 @@ import matplotlib
 import matplotlib.pyplot as plt
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import numpy as np
+import argparse
 
 
-# In[35]:
+# In[2]:
+
+
+"""List of arguments to be received"""
+"""
+ap = argparse.ArgumentParser()
+ap.add_argument("-tr", "--time_range", type=str, required=True, help="Temporal range of the data to download")
+args = vars(ap.parse_args())
+time_range = args["time_range"]
+"""
+# Specify the start and finish of the data collection
+# The range is specified in QTR (1 to 4 each year)
+# The range is inclusive of the min the max
+
+time_range = [(2018, 1), (2018, 4)]
+
+
+# In[3]:
 
 
 """Set up the working path"""
@@ -31,6 +55,7 @@ project_root = os.path.join(home, 'Desktop/data')
 path_master_indexes = os.path.join(project_root, 'master_indexes')
 path_daily_data = os.path.join(project_root, 'daily_data')
 path_error_log = os.path.join(project_root, 'errors.log')
+path_download_status_log = os.path.join(project_root, 'download_status.log')
 base_url = "https://www.sec.gov/Archives/"
 
 # Check that the folder structure exists and we have the permission to write on it
@@ -44,24 +69,13 @@ def test_setup_work_directory():
 test_setup_work_directory()
 
 
-# In[3]:
+# In[4]:
 
 
 verbose = False
 
 
 # ## Set the parameters of interest
-
-# ### Time range
-
-# In[4]:
-
-
-# Specify the start and finish of the data collection
-# The range is specified in QTR (1 to 4 each year)
-# The range is inclusive of the min the max
-time_range = [(2018, 1), (2018, 4)]
-
 
 # ### Documents of interests
 
@@ -485,7 +499,7 @@ for key in general_path:
         print(general_path[key][k])
 
 
-# In[36]:
+# In[25]:
 
 
 def display_download_stats(stats):
@@ -497,14 +511,16 @@ def display_download_stats(stats):
     print("[INFO] " + " | ".join(text))
 
 
-# In[37]:
+# In[32]:
 
 
 max_download = np.inf # No more download limits
 min_time_between_requests = 0.1  # [s]
 download_stats = {
     'bytes_downloaded': 0,
+    'nb_url': sum(nb_url.values()),
     'count_downloaded': 0,
+    'count_already_downloaded': 0,
     'download_failed': 0,
     'free_space': os.statvfs(project_root).f_frsize * os.statvfs(project_root).f_bavail
 }  # Number of files, bytes
@@ -516,52 +532,59 @@ except FileNotFoundError:
     pass
 
 # Ugly with statement to contain the stream to an error and automatically close it afterward
-with open(path_error_log, 'a') as f:
-    last_request = 0  # Initialize this timer
-    for file_type in doc_types:
-        counter = 0
-        for entry in tqdm(general_url[file_type]):
-            if counter < max_download:
-                path_doc_old = doc_url_to_filepath(*entry)  # [TBR]
-                path_doc = general_path[file_type][counter]
-                assert path_doc == path_doc_old
+last_request = 0  # Initialize this timer
+for file_type in doc_types:
+    counter = 0
+    for entry in tqdm(general_url[file_type]):
+        if counter < max_download:
+            #path_doc_old = doc_url_to_filepath(*entry)  # [TBR]
+            path_doc = general_path[file_type][counter]
+            #assert path_doc == path_doc_old
 
-                # Check if the file has already been downloaded
-                if not is_downloaded(path_doc):
-                    url_doc = base_url + entry[1]
-                    elapsed_since_last_requests = time.perf_counter() - last_request
-                    if elapsed_since_last_requests < min_time_between_requests:
-                        print("[WARNING] Will wait for {:.3f} s"
-                              .format(min_time_between_requests - elapsed_since_last_requests))
-                        time.sleep(min_time_between_requests - elapsed_since_last_requests)
-                    if verbose:
-                        print("[INFO] Time since last request: {:.3f} s".format(elapsed_since_last_requests))
-                    last_request = time.perf_counter()
-                    try:
-                        (filename, headers) = urllib.request.urlretrieve(url_doc, path_doc)
-                    except:
-                        dt_string = datetime.now().strftime("%Y%m%d_%H:%M:%S")
-                        error_message = "[ERROR] [{}] URL {} could not be downloaded".format(dt_string, url_doc)
-                        f.write(error_message + "\n")  # For later read
-                        print(error_message)  # For user is terminal is connected
-                        download_stats['download_failed'] += 1
-                        continue
+            # Check if the file has already been downloaded
+            if not is_downloaded(path_doc):
+                url_doc = base_url + entry[1]
+                elapsed_since_last_requests = time.perf_counter() - last_request
+                if elapsed_since_last_requests < min_time_between_requests:
+                    print("[WARNING] Will wait for {:.3f} s"
+                          .format(min_time_between_requests - elapsed_since_last_requests))
+                    time.sleep(min_time_between_requests - elapsed_since_last_requests)
+                if verbose:
+                    print("[INFO] Time since last request: {:.3f} s".format(elapsed_since_last_requests))
+                last_request = time.perf_counter()
+                try:
+                    dt_string = datetime.now().strftime("%Y%m%d_%H:%M:%S")
+                    print("[INFO] {} request sent".format(dt_string))
+                    (filename, headers) = urllib.request.urlretrieve(url_doc, path_doc)
+                except:
+                    dt_string = datetime.now().strftime("%Y%m%d_%H:%M:%S")
+                    error_message = "[ERROR] [{}] URL {} could not be downloaded".format(dt_string, url_doc)
+                    with open(path_error_log, 'a') as f:# Send to error log
+                        f.write(error_message + "\n")  
+                    print(error_message)  # For user is terminal is connected
+                    download_stats['download_failed'] += 1
+                    continue
 
-                    download_time = time.perf_counter() - last_request
-                    #print((filename, headers))
-                    downloaded_size = os.path.getsize(path_doc)
-                    download_stats['bytes_downloaded'] += downloaded_size
-                    download_stats['count_downloaded'] += 1
-                    download_stats['free_space'] = os.statvfs(project_root).f_frsize * os.statvfs(project_root).f_bavail
-                    print("[INFO] [{}] Latest download speed: {:,} kb in {:.3f} s ({:,.1f} kb/s)"
-                          .format(file_type, downloaded_size//2**10, download_time, downloaded_size/(2**10*download_time)))
-                    display_download_stats(download_stats)
-                else:
-                    if verbose:
-                        print("[WARNING] Document at {} already downloaded".format(path_doc))
+                download_time = time.perf_counter() - last_request
+                #print((filename, headers))
+                downloaded_size = os.path.getsize(path_doc)
+                download_stats['bytes_downloaded'] += downloaded_size
+                download_stats['count_downloaded'] += 1
+                download_stats['free_space'] = os.statvfs(project_root).f_frsize * os.statvfs(project_root).f_bavail
+                print("[INFO] [{}] Latest download speed: {:,} kb in {:.3f} s ({:,.1f} kb/s)"
+                      .format(file_type, downloaded_size//2**10, download_time, downloaded_size/(2**10*download_time)))
+                display_download_stats(download_stats)
             else:
-                break
-            counter += 1
+                download_stats['count_already_downloaded'] += 1
+                if verbose:
+                    print("[WARNING] Document at {} already downloaded".format(path_doc))
+
+            # After each url has been processes, overwrite the log
+            with open(path_download_status_log, 'w') as g:
+                g.write("{}".format(download_stats))
+        else:
+            break
+        counter += 1
 
 
 # ## Parse a doc and run it through the NLP
@@ -570,6 +593,8 @@ with open(path_error_log, 'a') as f:
 
 # In[ ]:
 
+
+analyser = SentimentIntensityAnalyzer()
 
 for file_type in doc_types:
     counter = 0
@@ -580,6 +605,7 @@ for file_type in doc_types:
             with open(entry) as f:  # Load the file
                 html_doc = f.read()
             soup = BeautifulSoup(html_doc, 'html.parser')
+            
             text_only = soup.get_text()
             t1 = time.perf_counter()
             print("Before: {:,} byte | After: {:,} byte | Done in: {:.1f} s"
