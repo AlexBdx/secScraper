@@ -26,17 +26,19 @@ import argparse
 
 
 """List of arguments to be received"""
-"""
+
 ap = argparse.ArgumentParser()
 ap.add_argument("-tr", "--time_range", type=str, required=True, help="Temporal range of the data to download")
 args = vars(ap.parse_args())
 time_range = args["time_range"]
-"""
+time_range = eval(time_range)  # Convert to actual python
+
 # Specify the start and finish of the data collection
 # The range is specified in QTR (1 to 4 each year)
 # The range is inclusive of the min the max
 
-time_range = [(2018, 1), (2018, 4)]
+
+#time_range = [(2018, 1), (2018, 4)]
 
 
 # In[3]:
@@ -54,6 +56,9 @@ base_url = "https://www.sec.gov/Archives/"
 
 # Check that the folder structure exists and we have the permission to write on it
 def test_setup_work_directory():
+    # Build the directory architecture if it does not exist yet
+    if not os.path.isdir(project_root):
+        os.makedirs(project_root)
     path_temp_file = os.path.join(project_root, 'temp_test_setup_work_directory.temp')
     with open(path_temp_file, 'w') as f:
         pass
