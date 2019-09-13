@@ -1,0 +1,419 @@
+[INFO] Attempting to SSH
+~/.ssh/alexandre-IAM-keypair.pem ubuntu@52.23.161.97
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+Welcome to Ubuntu 16.04.6 LTS (GNU/Linux 4.4.0-1092-aws x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  Get cloud support with Ubuntu Advantage Cloud Guest:
+    http://www.ubuntu.com/business/services/cloud
+
+12 packages can be updated.
+0 updates are security updates.
+
+New release '18.04.2 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+
+[INFO] Successfully SSHed
+[INFO] Repository found. Checking out
+Your branch is up-to-date with 'origin/master'.
+Already on 'master'
+From https://github.com/AlexBdx/sec-scrapper
+ * branch            master     -> FETCH_HEAD
+Already up-to-date.
+[INFO] Repository pulled from GitHub!
+[INFO] Running the sec-scrapper
+[(2018, 1), (2018, 3)]
+  0%|          | 0/3 [00:00<?, ?it/s]100%|██████████| 3/3 [00:00<00:00, 16131.94it/s]
+  0%|          | 0/6602 [00:00<?, ?it/s]100%|██████████| 6602/6602 [00:00<00:00, 211218.88it/s]
+  0%|          | 0/13340 [00:00<?, ?it/s]100%|██████████| 13340/13340 [00:00<00:00, 217357.75it/s]
+  0%|          | 0/51888 [00:00<?, ?it/s] 43%|████▎     | 22179/51888 [00:00<00:00, 221781.75it/s] 86%|████████▌ | 44724/51888 [00:00<00:00, 222869.54it/s]100%|██████████| 51888/51888 [00:00<00:00, 226889.79it/s]
+  0%|          | 0/6602 [00:00<?, ?it/s]  0%|          | 29/6602 [00:01<06:38, 16.49it/s]  0%|          | 30/6602 [00:02<35:06,  3.12it/s]  0%|          | 31/6602 [00:04<1:16:29,  1.43it/s]  0%|          | 32/6602 [00:04<1:17:03,  1.42it/s]  0%|          | 33/6602 [00:06<1:47:52,  1.01it/s]  1%|          | 34/6602 [00:07<1:56:26,  1.06s/it]  1%|          | 35/6602 [00:08<1:48:50,  1.01it/s]  1%|          | 36/6602 [00:11<2:35:12,  1.42s/it]  1%|          | 37/6602 [00:11<2:11:04,  1.20s/it]  1%|          | 38/6602 [00:12<2:09:18,  1.18s/it]  1%|          | 39/6602 [00:13<1:42:19,  1.07it/s]  1%|          | 40/6602 [00:14<1:52:08,  1.03s/it]  1%|          | 42/6602 [00:14<1:26:00,  1.27it/s]  1%|          | 43/6602 [00:16<1:35:00,  1.15it/s]{'count_downloaded': 0, 'bytes_downloaded': 0}
+[WARNING] Nothing to unzip. Is this normal?.
+
+[INFO] Parsed 3 indexes and merged 71830 URL in 1.269 s (56,599.7 URL/s)
+{'8-K': 51888, '10-K': 6602, '10-Q': 13340}
+
+
+[INFO] Displaying 10 sample local paths:
+
+Report type: 8-K (10/51,888)
+20180109 edgar/data/1000045/0001193125-18-007253.txt
+20180205 edgar/data/1000045/0001193125-18-032199.txt
+20180207 edgar/data/1000045/0001193125-18-034693.txt
+20180220 edgar/data/1000045/0001193125-18-049706.txt
+20180205 edgar/data/1000209/0001193125-18-032155.txt
+...
+20180925 edgar/data/99780/0000099780-18-000155.txt
+20180927 edgar/data/99780/0000099780-18-000157.txt
+20180727 edgar/data/9984/0000009984-18-000057.txt
+20180920 edgar/data/9984/0000898822-18-000062.txt
+20180924 edgar/data/9984/0000898822-18-000069.txt
+
+Report type: 10-K (10/6,602)
+20180314 edgar/data/1000209/0001193125-18-082402.txt
+20180221 edgar/data/1000228/0001000228-18-000012.txt
+20180212 edgar/data/1000229/0001000229-18-000025.txt
+20180316 edgar/data/1000232/0001558370-18-002201.txt
+20180316 edgar/data/1000298/0001558370-18-002168.txt
+...
+20180827 edgar/data/96021/0000096021-18-000126.txt
+20180829 edgar/data/96536/0000096536-18-000022.txt
+20180925 edgar/data/96793/0001193125-18-282598.txt
+20180716 edgar/data/96885/0001185185-18-001258.txt
+20180821 edgar/data/98338/0001213900-18-011517.txt
+
+Report type: 10-Q (10/13,340)
+20180209 edgar/data/1000045/0001193125-18-037381.txt
+20180313 edgar/data/1000230/0001437749-18-004449.txt
+20180206 edgar/data/1001039/0001628280-18-001147.txt
+20180207 edgar/data/1001115/0001564590-18-001474.txt
+20180202 edgar/data/1001250/0001104659-18-006059.txt
+...
+20180802 edgar/data/99250/0000099250-18-000009.txt
+20180807 edgar/data/99302/0001206774-18-002300.txt
+20180810 edgar/data/99771/0000099771-18-000071.txt
+20180726 edgar/data/99780/0000099780-18-000137.txt
+20180727 edgar/data/9984/0000009984-18-000059.txt
+[INFO] Displaying 10 sample local paths:
+
+Report type: 8-K (10/51,888)
+/home/ubuntu/Desktop/data/daily_data/20180109/1000045/000119312518007253.html
+/home/ubuntu/Desktop/data/daily_data/20180205/1000045/000119312518032199.html
+/home/ubuntu/Desktop/data/daily_data/20180207/1000045/000119312518034693.html
+/home/ubuntu/Desktop/data/daily_data/20180220/1000045/000119312518049706.html
+/home/ubuntu/Desktop/data/daily_data/20180205/1000209/000119312518032155.html
+...
+/home/ubuntu/Desktop/data/daily_data/20180925/99780/000009978018000155.html
+/home/ubuntu/Desktop/data/daily_data/20180927/99780/000009978018000157.html
+/home/ubuntu/Desktop/data/daily_data/20180727/9984/000000998418000057.html
+/home/ubuntu/Desktop/data/daily_data/20180920/9984/000089882218000062.html
+/home/ubuntu/Desktop/data/daily_data/20180924/9984/000089882218000069.html
+
+Report type: 10-K (10/6,602)
+/home/ubuntu/Desktop/data/daily_data/20180314/1000209/000119312518082402.html
+/home/ubuntu/Desktop/data/daily_data/20180221/1000228/000100022818000012.html
+/home/ubuntu/Desktop/data/daily_data/20180212/1000229/000100022918000025.html
+/home/ubuntu/Desktop/data/daily_data/20180316/1000232/000155837018002201.html
+/home/ubuntu/Desktop/data/daily_data/20180316/1000298/000155837018002168.html
+...
+/home/ubuntu/Desktop/data/daily_data/20180827/96021/000009602118000126.html
+/home/ubuntu/Desktop/data/daily_data/20180829/96536/000009653618000022.html
+/home/ubuntu/Desktop/data/daily_data/20180925/96793/000119312518282598.html
+/home/ubuntu/Desktop/data/daily_data/20180716/96885/000118518518001258.html
+/home/ubuntu/Desktop/data/daily_data/20180821/98338/000121390018011517.html
+
+Report type: 10-Q (10/13,340)
+/home/ubuntu/Desktop/data/daily_data/20180209/1000045/000119312518037381.html
+/home/ubuntu/Desktop/data/daily_data/20180313/1000230/000143774918004449.html
+/home/ubuntu/Desktop/data/daily_data/20180206/1001039/000162828018001147.html
+/home/ubuntu/Desktop/data/daily_data/20180207/1001115/000156459018001474.html
+/home/ubuntu/Desktop/data/daily_data/20180202/1001250/000110465918006059.html
+...
+/home/ubuntu/Desktop/data/daily_data/20180802/99250/000009925018000009.html
+/home/ubuntu/Desktop/data/daily_data/20180807/99302/000120677418002300.html
+/home/ubuntu/Desktop/data/daily_data/20180810/99771/000009977118000071.html
+/home/ubuntu/Desktop/data/daily_data/20180726/99780/000009978018000137.html
+/home/ubuntu/Desktop/data/daily_data/20180727/9984/000000998418000059.html
+[INFO] 20190913_21:20:21 request sent
+[INFO] [10-K] Latest download speed: 23,401 kb in 1.735 s (13,488.3 kb/s)
+[INFO] bytes_downloaded: 23,962,701 | download_failed: 0 | free_space: 99,472,060,416 | count_downloaded: 1 | nb_url: 71,830 | count_already_downloaded: 28
+[INFO] 20190913_21:20:23 request sent
+[INFO] [10-K] Latest download speed: 12,661 kb in 0.926 s (13,666.6 kb/s)
+[INFO] bytes_downloaded: 36,927,947 | download_failed: 0 | free_space: 99,459,088,384 | count_downloaded: 2 | nb_url: 71,830 | count_already_downloaded: 28
+[INFO] 20190913_21:20:24 request sent
+[INFO] [10-K] Latest download speed: 16,914 kb in 1.580 s (10,708.0 kb/s)
+[INFO] bytes_downloaded: 54,247,967 | download_failed: 0 | free_space: 99,441,762,304 | count_downloaded: 3 | nb_url: 71,830 | count_already_downloaded: 28
+[INFO] 20190913_21:20:26 request sent
+[INFO] [10-K] Latest download speed: 14,009 kb in 0.716 s (19,572.2 kb/s)
+[INFO] bytes_downloaded: 68,593,772 | download_failed: 0 | free_space: 99,427,409,920 | count_downloaded: 4 | nb_url: 71,830 | count_already_downloaded: 28
+[INFO] 20190913_21:20:26 request sent
+[INFO] [10-K] Latest download speed: 20,428 kb in 1.642 s (12,443.5 kb/s)
+[INFO] bytes_downloaded: 89,512,581 | download_failed: 0 | free_space: 99,406,483,456 | count_downloaded: 5 | nb_url: 71,830 | count_already_downloaded: 28
+[INFO] 20190913_21:20:28 request sent
+[INFO] [10-K] Latest download speed: 12,142 kb in 1.246 s (9,745.5 kb/s)
+[INFO] bytes_downloaded: 101,946,783 | download_failed: 0 | free_space: 99,394,043,904 | count_downloaded: 6 | nb_url: 71,830 | count_already_downloaded: 28
+[INFO] 20190913_21:20:29 request sent
+[INFO] [10-K] Latest download speed: 14,591 kb in 0.832 s (17,535.2 kb/s)
+[INFO] bytes_downloaded: 116,888,795 | download_failed: 0 | free_space: 99,379,097,600 | count_downloaded: 7 | nb_url: 71,830 | count_already_downloaded: 28
+[INFO] 20190913_21:20:30 request sent
+[INFO] [10-K] Latest download speed: 31,981 kb in 2.407 s (13,286.7 kb/s)
+[INFO] bytes_downloaded: 149,638,060 | download_failed: 0 | free_space: 99,346,341,888 | count_downloaded: 8 | nb_url: 71,830 | count_already_downloaded: 28
+[INFO] 20190913_21:20:32 request sent
+[INFO] [10-K] Latest download speed: 13,274 kb in 0.683 s (19,422.0 kb/s)
+[INFO] bytes_downloaded: 163,230,834 | download_failed: 0 | free_space: 99,332,743,168 | count_downloaded: 9 | nb_url: 71,830 | count_already_downloaded: 28
+[INFO] 20190913_21:20:33 request sent
+[INFO] [10-K] Latest download speed: 14,579 kb in 1.144 s (12,743.0 kb/s)
+[INFO] bytes_downloaded: 178,159,828 | download_failed: 0 | free_space: 99,317,809,152 | count_downloaded: 10 | nb_url: 71,830 | count_already_downloaded: 28
+[INFO] 20190913_21:20:34 request sent
+[INFO] [10-K] Latest download speed: 7,693 kb in 0.360 s (21,390.0 kb/s)
+[INFO] bytes_downloaded: 186,037,813 | download_failed: 0 | free_space: 99,309,920,256 | count_downloaded: 11 | nb_url: 71,830 | count_already_downloaded: 28
+[INFO] 20190913_21:20:35 request sent
+[INFO] [10-K] Latest download speed: 23,102 kb in 1.235 s (18,711.1 kb/s)
+[INFO] bytes_downloaded: 209,694,488 | download_failed: 0 | free_space: 99,285,803,008 | count_downloaded: 12 | nb_url: 71,830 | count_already_downloaded: 28
+[INFO] 20190913_21:20:36 request sent
+[INFO] [10-K] Latest download speed: 5,456 kb in 0.459 s (11,899.5 kb/s)
+[INFO] bytes_downloaded: 215,282,101 | download_failed: 0 | free_space: 99,272,904,704 | count_downloaded: 13 | nb_url: 71,830 | count_already_downloaded: 29
+[INFO] 20190913_21:20:36 request sent
+[INFO] [10-K] Latest download speed: 11,465 kb in 1.061 s (10,807.3 kb/s)
+[INFO] bytes_downloaded: 227,023,028 | download_failed: 0 | free_space: 99,249,266,688 | count_downloaded: 14 | nb_url: 71,830 | count_already_downloaded: 29
+[INFO] 20190913_21:20:37 request sent
+[INFO] [10-K] Latest download speed: 14,038 kb in 1.138 s (12,334.9 kb/s)  1%|          | 44/6602 [00:17<1:43:50,  1.05it/s]  1%|          | 46/6602 [00:18<1:26:30,  1.26it/s]  1%|          | 47/6602 [00:20<2:36:26,  1.43s/it]  1%|          | 48/6602 [00:21<2:08:46,  1.18s/it]  1%|          | 50/6602 [00:22<1:49:55,  1.01s/it]  1%|          | 52/6602 [00:23<1:33:40,  1.17it/s]  1%|          | 54/6602 [00:25<1:26:49,  1.26it/s]  1%|          | 55/6602 [00:26<2:02:47,  1.13s/it]  1%|          | 58/6602 [00:27<1:34:51,  1.15it/s]  1%|          | 59/6602 [00:28<1:37:00,  1.12it/s]  1%|          | 61/6602 [00:31<1:48:46,  1.00it/s]  1%|          | 63/6602 [00:33<1:47:40,  1.01it/s]  1%|          | 65/6602 [00:35<1:46:11,  1.03it/s]  1%|          | 67/6602 [00:35<1:22:01,  1.33it/s]  1%|          | 68/6602 [00:36<1:20:06,  1.36it/s]  1%|          | 69/6602 [00:37<1:48:05,  1.01it/s]  1%|          | 70/6602 [00:38<1:39:05,  1.10it/s]  1%|          | 71/6602 [00:39<1:29:23,  1.22it/s]-bash: line 29:  2207 Terminated              python3 sec-scrapper.py -tr "[(2018, 1), (2018, 3)]"
+[INFO] Attempting to SSH
+~/.ssh/alexandre-IAM-keypair.pem ubuntu@52.23.161.97
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+Welcome to Ubuntu 16.04.6 LTS (GNU/Linux 4.4.0-1092-aws x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  Get cloud support with Ubuntu Advantage Cloud Guest:
+    http://www.ubuntu.com/business/services/cloud
+
+12 packages can be updated.
+0 updates are security updates.
+
+New release '18.04.2 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+
+[INFO] Successfully SSHed
+[INFO] Repository found. Checking out
+Your branch is up-to-date with 'origin/master'.
+Already on 'master'
+From https://github.com/AlexBdx/sec-scrapper
+ * branch            master     -> FETCH_HEAD
+Already up-to-date.
+[INFO] Repository pulled from GitHub!
+[INFO] Running the sec-scrapper
+[(2018, 1), (2018, 3)]
+  0%|          | 0/3 [00:00<?, ?it/s]100%|██████████| 3/3 [00:00<00:00, 16710.37it/s]
+  0%|          | 0/6602 [00:00<?, ?it/s]100%|██████████| 6602/6602 [00:00<00:00, 213322.82it/s]
+  0%|          | 0/13340 [00:00<?, ?it/s]100%|██████████| 13340/13340 [00:00<00:00, 218706.94it/s]
+  0%|          | 0/51888 [00:00<?, ?it/s] 43%|████▎     | 22463/51888 [00:00<00:00, 224615.22it/s] 86%|████████▌ | 44725/51888 [00:00<00:00, 224010.72it/s]100%|██████████| 51888/51888 [00:00<00:00, 226489.09it/s]
+  0%|          | 0/6602 [00:00<?, ?it/s]  1%|          | 73/6602 [00:00<00:48, 133.49it/s]  1%|          | 78/6602 [00:09<57:12,  1.90it/s]   1%|          | 81/6602 [00:12<1:10:45,  1.54it/s]  1%|▏         | 84/6602 [00:17<1:51:12,  1.02s/it]  1%|▏         | 86/6602 [00:19<1:43:36,  1.05it/s]{'count_downloaded': 0, 'bytes_downloaded': 0}
+[WARNING] Nothing to unzip. Is this normal?.
+
+[INFO] Parsed 3 indexes and merged 71830 URL in 1.263 s (56,866.8 URL/s)
+{'10-Q': 13340, '8-K': 51888, '10-K': 6602}
+
+
+[INFO] Displaying 10 sample local paths:
+
+Report type: 10-Q (10/13,340)
+20180209 edgar/data/1000045/0001193125-18-037381.txt
+20180313 edgar/data/1000230/0001437749-18-004449.txt
+20180206 edgar/data/1001039/0001628280-18-001147.txt
+20180207 edgar/data/1001115/0001564590-18-001474.txt
+20180202 edgar/data/1001250/0001104659-18-006059.txt
+...
+20180802 edgar/data/99250/0000099250-18-000009.txt
+20180807 edgar/data/99302/0001206774-18-002300.txt
+20180810 edgar/data/99771/0000099771-18-000071.txt
+20180726 edgar/data/99780/0000099780-18-000137.txt
+20180727 edgar/data/9984/0000009984-18-000059.txt
+
+Report type: 8-K (10/51,888)
+20180109 edgar/data/1000045/0001193125-18-007253.txt
+20180205 edgar/data/1000045/0001193125-18-032199.txt
+20180207 edgar/data/1000045/0001193125-18-034693.txt
+20180220 edgar/data/1000045/0001193125-18-049706.txt
+20180205 edgar/data/1000209/0001193125-18-032155.txt
+...
+20180925 edgar/data/99780/0000099780-18-000155.txt
+20180927 edgar/data/99780/0000099780-18-000157.txt
+20180727 edgar/data/9984/0000009984-18-000057.txt
+20180920 edgar/data/9984/0000898822-18-000062.txt
+20180924 edgar/data/9984/0000898822-18-000069.txt
+
+Report type: 10-K (10/6,602)
+20180314 edgar/data/1000209/0001193125-18-082402.txt
+20180221 edgar/data/1000228/0001000228-18-000012.txt
+20180212 edgar/data/1000229/0001000229-18-000025.txt
+20180316 edgar/data/1000232/0001558370-18-002201.txt
+20180316 edgar/data/1000298/0001558370-18-002168.txt
+...
+20180827 edgar/data/96021/0000096021-18-000126.txt
+20180829 edgar/data/96536/0000096536-18-000022.txt
+20180925 edgar/data/96793/0001193125-18-282598.txt
+20180716 edgar/data/96885/0001185185-18-001258.txt
+20180821 edgar/data/98338/0001213900-18-011517.txt
+[INFO] Displaying 10 sample local paths:
+
+Report type: 10-Q (10/13,340)
+/home/ubuntu/Desktop/data/daily_data/20180209/1000045/000119312518037381.html
+/home/ubuntu/Desktop/data/daily_data/20180313/1000230/000143774918004449.html
+/home/ubuntu/Desktop/data/daily_data/20180206/1001039/000162828018001147.html
+/home/ubuntu/Desktop/data/daily_data/20180207/1001115/000156459018001474.html
+/home/ubuntu/Desktop/data/daily_data/20180202/1001250/000110465918006059.html
+...
+/home/ubuntu/Desktop/data/daily_data/20180802/99250/000009925018000009.html
+/home/ubuntu/Desktop/data/daily_data/20180807/99302/000120677418002300.html
+/home/ubuntu/Desktop/data/daily_data/20180810/99771/000009977118000071.html
+/home/ubuntu/Desktop/data/daily_data/20180726/99780/000009978018000137.html
+/home/ubuntu/Desktop/data/daily_data/20180727/9984/000000998418000059.html
+
+Report type: 8-K (10/51,888)
+/home/ubuntu/Desktop/data/daily_data/20180109/1000045/000119312518007253.html
+/home/ubuntu/Desktop/data/daily_data/20180205/1000045/000119312518032199.html
+/home/ubuntu/Desktop/data/daily_data/20180207/1000045/000119312518034693.html
+/home/ubuntu/Desktop/data/daily_data/20180220/1000045/000119312518049706.html
+/home/ubuntu/Desktop/data/daily_data/20180205/1000209/000119312518032155.html
+...
+/home/ubuntu/Desktop/data/daily_data/20180925/99780/000009978018000155.html
+/home/ubuntu/Desktop/data/daily_data/20180927/99780/000009978018000157.html
+/home/ubuntu/Desktop/data/daily_data/20180727/9984/000000998418000057.html
+/home/ubuntu/Desktop/data/daily_data/20180920/9984/000089882218000062.html
+/home/ubuntu/Desktop/data/daily_data/20180924/9984/000089882218000069.html
+
+Report type: 10-K (10/6,602)
+/home/ubuntu/Desktop/data/daily_data/20180314/1000209/000119312518082402.html
+/home/ubuntu/Desktop/data/daily_data/20180221/1000228/000100022818000012.html
+/home/ubuntu/Desktop/data/daily_data/20180212/1000229/000100022918000025.html
+/home/ubuntu/Desktop/data/daily_data/20180316/1000232/000155837018002201.html
+/home/ubuntu/Desktop/data/daily_data/20180316/1000298/000155837018002168.html
+...
+/home/ubuntu/Desktop/data/daily_data/20180827/96021/000009602118000126.html
+/home/ubuntu/Desktop/data/daily_data/20180829/96536/000009653618000022.html
+/home/ubuntu/Desktop/data/daily_data/20180925/96793/000119312518282598.html
+/home/ubuntu/Desktop/data/daily_data/20180716/96885/000118518518001258.html
+/home/ubuntu/Desktop/data/daily_data/20180821/98338/000121390018011517.html
+[INFO] 20190913_21:21:19 request sent
+[INFO] [10-K] Latest download speed: 2,745 kb in 0.486 s (5,650.0 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,766,876,672 | bytes_downloaded: 2,811,113 | count_downloaded: 1 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:19 request sent
+[INFO] [10-K] Latest download speed: 37,819 kb in 2.301 s (16,434.0 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,728,144,896 | bytes_downloaded: 41,538,698 | count_downloaded: 2 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:21 request sent
+[INFO] [10-K] Latest download speed: 7,729 kb in 0.777 s (9,948.6 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,720,223,232 | bytes_downloaded: 49,453,442 | count_downloaded: 3 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:22 request sent
+[INFO] [10-K] Latest download speed: 49,809 kb in 3.044 s (16,365.5 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,669,211,648 | bytes_downloaded: 100,457,982 | count_downloaded: 4 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:25 request sent
+[INFO] [10-K] Latest download speed: 23,963 kb in 1.585 s (15,117.1 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,644,668,416 | bytes_downloaded: 124,996,189 | count_downloaded: 5 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:27 request sent
+[INFO] [10-K] Latest download speed: 11,284 kb in 0.971 s (11,615.9 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,633,105,408 | bytes_downloaded: 136,551,257 | count_downloaded: 6 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:28 request sent
+[INFO] [10-K] Latest download speed: 8,032 kb in 0.907 s (8,857.5 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,624,872,448 | bytes_downloaded: 144,777,028 | count_downloaded: 7 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:29 request sent
+[INFO] [10-K] Latest download speed: 11,403 kb in 1.032 s (11,051.9 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,613,190,656 | bytes_downloaded: 156,454,305 | count_downloaded: 8 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:30 request sent
+[INFO] [10-K] Latest download speed: 7,785 kb in 0.888 s (8,769.1 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,605,207,552 | bytes_downloaded: 164,426,800 | count_downloaded: 9 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:31 request sent
+[INFO] [10-K] Latest download speed: 40,158 kb in 3.182 s (12,622.5 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,564,079,616 | bytes_downloaded: 205,549,438 | count_downloaded: 10 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:34 request sent
+[INFO] [10-K] Latest download speed: 5,360 kb in 0.643 s (8,330.4 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,558,582,784 | bytes_downloaded: 211,038,545 | count_downloaded: 11 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:34 request sent
+[INFO] [10-K] Latest download speed: 25,691 kb in 1.853 s (13,866.2 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,532,270,080 | bytes_downloaded: 237,346,795 | count_downloaded: 12 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:36 request sent
+[INFO] [10-K] Latest download speed: 9,154 kb in 0.688 s (13,303.2 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,522,890,240 | bytes_downloaded: 246,720,630 | count_downloaded: 13 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:37 request sent
+[INFO] [10-K] Latest download speed: 10,454 kb in 0.894 s (11,688.8 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,512,179,200 | bytes_downloaded: 257,426,185 | count_downloaded: 14 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:38 request sent
+[INFO] [10-K] Latest download speed: 8,980 kb in 0.872 s (10,295.5 kb/s)  1%|▏         | 88/6602 [00:21<1:49:09,  1.01s/it]  1%|▏         | 89/6602 [00:23<2:13:09,  1.23s/it]  1%|▏         | 90/6602 [00:24<2:02:53,  1.13s/it]  1%|▏         | 91/6602 [00:24<1:49:38,  1.01s/it]  1%|▏         | 92/6602 [00:25<1:34:59,  1.14it/s]  1%|▏         | 93/6602 [00:26<1:24:44,  1.28it/s]  1%|▏         | 94/6602 [00:26<1:20:48,  1.34it/s]  1%|▏         | 95/6602 [00:28<2:02:13,  1.13s/it]  1%|▏         | 96/6602 [00:30<2:16:38,  1.26s/it]  1%|▏         | 97/6602 [00:31<1:58:52,  1.10s/it]  1%|▏         | 98/6602 [00:32<2:19:14,  1.28s/it]  1%|▏         | 99/6602 [00:36<3:34:06,  1.98s/it]  2%|▏         | 100/6602 [00:37<3:11:08,  1.76s/it]  2%|▏         | 101/6602 [00:39<3:08:55,  1.74s/it]  2%|▏         | 102/6602 [00:40<2:45:56,  1.53s/it]  2%|▏         | 103/6602 [00:42<3:06:27,  1.72s/it]  2%|▏         | 104/6602 [00:44<3:15:51,  1.81s/it]  2%|▏         | 105/6602 [00:45<2:52:54,  1.60s/it]  2%|▏         | 106/6602 [00:46<2:43:35,  1.51s/it]  2%|▏         | 107/6602 [00:48<2:49:27,  1.57s/it]  2%|▏         | 108/6602 [00:49<2:37:38,  1.46s/it]  2%|▏         | 109/6602 [00:50<2:23:00,  1.32s/it]  2%|▏         | 110/6602 [00:53<3:14:49,  1.80s/it]  2%|▏         | 111/6602 [00:54<2:32:45,  1.41s/it]  2%|▏         | 112/6602 [00:55<2:13:51,  1.24s/it]  2%|▏         | 113/6602 [00:56<2:07:35,  1.18s/it]  2%|▏         | 114/6602 [00:56<1:53:50,  1.05s/it]  2%|▏         | 115/6602 [00:58<2:20:04,  1.30s/it]  2%|▏         | 116/6602 [00:59<2:05:24,  1.16s/it]
+[INFO] count_already_downloaded: 72 | free_space: 98,502,975,488 | bytes_downloaded: 266,622,114 | count_downloaded: 15 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:39 request sent
+[INFO] [10-K] Latest download speed: 19,851 kb in 1.378 s (14,407.8 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,482,642,944 | bytes_downloaded: 286,949,854 | count_downloaded: 16 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:40 request sent
+[INFO] [10-K] Latest download speed: 4,275 kb in 1.742 s (2,454.1 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,478,260,224 | bytes_downloaded: 291,327,871 | count_downloaded: 17 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:42 request sent
+[INFO] [10-K] Latest download speed: 7,060 kb in 0.912 s (7,744.9 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,471,018,496 | bytes_downloaded: 298,557,726 | count_downloaded: 18 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:43 request sent
+[INFO] [10-K] Latest download speed: 6,546 kb in 0.725 s (9,029.0 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,464,305,152 | bytes_downloaded: 305,261,796 | count_downloaded: 19 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:44 request sent
+[INFO] [10-K] Latest download speed: 7,476 kb in 0.560 s (13,338.9 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,456,641,536 | bytes_downloaded: 312,917,327 | count_downloaded: 20 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:44 request sent
+[INFO] [10-K] Latest download speed: 4,550 kb in 0.560 s (8,119.0 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,451,976,192 | bytes_downloaded: 317,576,761 | count_downloaded: 21 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:45 request sent
+[INFO] [10-K] Latest download speed: 6,797 kb in 0.660 s (10,300.0 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,445,008,896 | bytes_downloaded: 324,537,397 | count_downloaded: 22 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:45 request sent
+[INFO] [10-K] Latest download speed: 24,713 kb in 2.018 s (12,245.4 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,419,695,616 | bytes_downloaded: 349,844,528 | count_downloaded: 23 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:47 request sent
+[INFO] [10-K] Latest download speed: 19,132 kb in 1.570 s (12,183.7 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,400,096,256 | bytes_downloaded: 369,436,441 | count_downloaded: 24 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:49 request sent
+[INFO] [10-K] Latest download speed: 7,029 kb in 0.714 s (9,846.6 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,392,891,392 | bytes_downloaded: 376,634,578 | count_downloaded: 25 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:50 request sent
+[INFO] [10-K] Latest download speed: 18,396 kb in 1.723 s (10,677.6 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,374,045,696 | bytes_downloaded: 395,472,243 | count_downloaded: 26 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:51 request sent
+[INFO] [10-K] Latest download speed: 59,698 kb in 3.587 s (16,642.5 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,312,904,704 | bytes_downloaded: 456,603,816 | count_downloaded: 27 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:55 request sent
+[INFO] [10-K] Latest download speed: 19,227 kb in 1.270 s (15,144.3 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,293,211,136 | bytes_downloaded: 476,292,881 | count_downloaded: 28 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:56 request sent
+[INFO] [10-K] Latest download speed: 20,453 kb in 1.696 s (12,061.5 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,272,260,096 | bytes_downloaded: 497,236,847 | count_downloaded: 29 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:58 request sent
+[INFO] [10-K] Latest download speed: 11,925 kb in 1.037 s (11,497.3 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,260,037,632 | bytes_downloaded: 509,448,654 | count_downloaded: 30 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:21:59 request sent
+[INFO] [10-K] Latest download speed: 23,985 kb in 2.163 s (11,087.2 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,235,469,824 | bytes_downloaded: 534,010,026 | count_downloaded: 31 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:22:01 request sent
+[INFO] [10-K] Latest download speed: 27,124 kb in 2.011 s (13,487.4 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,207,686,656 | bytes_downloaded: 561,785,162 | count_downloaded: 32 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:22:03 request sent
+[INFO] [10-K] Latest download speed: 7,133 kb in 1.102 s (6,470.2 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,200,375,296 | bytes_downloaded: 569,089,686 | count_downloaded: 33 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:22:04 request sent
+[INFO] [10-K] Latest download speed: 15,640 kb in 1.310 s (11,940.5 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,184,351,744 | bytes_downloaded: 585,105,793 | count_downloaded: 34 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:22:06 request sent
+[INFO] [10-K] Latest download speed: 24,387 kb in 1.692 s (14,413.3 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,159,374,336 | bytes_downloaded: 610,079,070 | count_downloaded: 35 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:22:07 request sent
+[INFO] [10-K] Latest download speed: 14,407 kb in 1.202 s (11,986.2 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,144,616,448 | bytes_downloaded: 624,832,426 | count_downloaded: 36 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:22:08 request sent
+[INFO] [10-K] Latest download speed: 13,684 kb in 1.006 s (13,601.3 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,130,595,840 | bytes_downloaded: 638,844,844 | count_downloaded: 37 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:22:09 request sent
+[INFO] [10-K] Latest download speed: 39,583 kb in 2.918 s (13,567.4 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,090,057,728 | bytes_downloaded: 679,377,902 | count_downloaded: 38 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:22:12 request sent
+[INFO] [10-K] Latest download speed: 8,894 kb in 0.505 s (17,615.1 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,080,944,128 | bytes_downloaded: 688,485,361 | count_downloaded: 39 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:22:13 request sent
+[INFO] [10-K] Latest download speed: 11,065 kb in 0.830 s (13,333.3 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,069,606,400 | bytes_downloaded: 699,816,885 | count_downloaded: 40 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:22:14 request sent
+[INFO] [10-K] Latest download speed: 11,155 kb in 1.044 s (10,681.4 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,058,178,560 | bytes_downloaded: 711,240,459 | count_downloaded: 41 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:22:15 request sent
+[INFO] [10-K] Latest download speed: 5,906 kb in 0.756 s (7,812.4 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,052,120,576 | bytes_downloaded: 717,289,213 | count_downloaded: 42 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:22:15 request sent
+[INFO] [10-K] Latest download speed: 19,889 kb in 1.862 s (10,683.8 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,031,747,072 | bytes_downloaded: 737,655,698 | count_downloaded: 43 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:22:17 request sent
+[INFO] [10-K] Latest download speed: 9,823 kb in 0.843 s (11,649.5 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,021,683,200 | bytes_downloaded: 747,715,394 | count_downloaded: 44 | nb_url: 71,830 | download_failed: 0
+[INFO] 20190913_21:22:18 request sent
+[INFO] [10-K] Latest download speed: 14,177 kb in 1.358 s (10,440.8 kb/s)
+[INFO] count_already_downloaded: 72 | free_space: 98,007,158,784 | bytes_downloaded: 762,233,197 | count_downloaded: 45 | nb_url: 71,830 | download_failed: 0  2%|▏         | 117/6602 [01:00<2:11:49,  1.22s/it]  2%|▏         | 118/6602 [01:03<2:53:22,  1.60s/it]  2%|▏         | 119/6602 [01:05<2:56:26,  1.63s/it]-bash: line 29:  2318 Terminated              python3 sec-scrapper.py -tr "[(2018, 1), (2018, 3)]"

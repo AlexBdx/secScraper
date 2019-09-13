@@ -26,22 +26,17 @@ import argparse
 
 
 """List of arguments to be received"""
-
+"""
 ap = argparse.ArgumentParser()
 ap.add_argument("-tr", "--time_range", type=str, required=True, help="Temporal range of the data to download")
 args = vars(ap.parse_args())
 time_range = args["time_range"]
-time_range = eval(time_range)  # Convert to actual python
-assert type(time_range) == list
-assert len(time_range) == 2
-assert type(time_range[0]) == tuple and type(time_range[1]) == tuple
-
+"""
 # Specify the start and finish of the data collection
 # The range is specified in QTR (1 to 4 each year)
 # The range is inclusive of the min the max
 
-
-#time_range = [(2018, 1), (2018, 4)]
+time_range = [(2018, 1), (2018, 4)]
 
 
 # In[3]:
@@ -583,7 +578,8 @@ for file_type in doc_types:
 
             # After each url has been processes, overwrite the log
             with open(path_download_status_log, 'w') as g:
-                g.write("{}".format(download_stats))
+                g.write("Working on: {}\n".format(time_range))
+                g.write("{}\n".format(download_stats))
         else:
             break
         counter += 1
