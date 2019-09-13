@@ -1,5 +1,4 @@
-requests, zipfile, io
-urllib
+requests
 bs4
 tqdm
 matplotlib>=3
