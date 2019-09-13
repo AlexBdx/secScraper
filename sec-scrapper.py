@@ -32,6 +32,9 @@ ap.add_argument("-tr", "--time_range", type=str, required=True, help="Temporal r
 args = vars(ap.parse_args())
 time_range = args["time_range"]
 time_range = eval(time_range)  # Convert to actual python
+assert type(time_range) == list
+assert len(time_range) == 2
+assert type(time_range[0]) == tuple and type(time_range[1]) == tuple
 
 # Specify the start and finish of the data collection
 # The range is specified in QTR (1 to 4 each year)
