@@ -86,7 +86,6 @@ verbose = False
 doc_types = [
     '10-K',
     '10-Q',
-    '8-K'
 ]
 
 
@@ -507,10 +506,14 @@ def display_download_stats(stats):
     """
     Just a better way to display the downloading stats rather than dumping the dict"""
     text = []
-    for key in stats:
-        text.append(key + ": {:,}".format(stats[key]))   
+    try:
+        if stats['free_space'] < 2**30:  # Display text in bold red if less than a Gb left
+            for key in stats:
+                text.append(colored(key + ": {:,}".format(stats[key])), 'red', attrs=['bold'])
+    except:  
+        for key in stats:
+            text.append(key + ": {:,}".format(stats[key]))   
     print("[INFO] " + " | ".join(text))
-
 
 # In[32]:
 
