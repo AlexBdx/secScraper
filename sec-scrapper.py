@@ -507,7 +507,7 @@ def display_download_stats(stats):
     Just a better way to display the downloading stats rather than dumping the dict"""
     text = []
     try:
-        if stats['free_space'] < 2**30:  # Display text in bold red if less than a Gb left
+        if stats['free_space'] < 10*2**30:  # Display text in bold red if less than a Gb left
             for key in stats:
                 to_append = key + ": {:,}".format(stats[key])
                 text.append("{}".format(colored(to_append, 'red', attrs=['bold'])))
