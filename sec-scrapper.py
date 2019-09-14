@@ -510,6 +510,9 @@ def display_download_stats(stats):
         if stats['free_space'] < 2**30:  # Display text in bold red if less than a Gb left
             for key in stats:
                 text.append(colored(key + ": {:,}".format(stats[key])), 'red', attrs=['bold'])
+        else:
+            for key in stats:
+                text.append(key + ": {:,}".format(stats[key])) 
     except:  
         for key in stats:
             text.append(key + ": {:,}".format(stats[key]))   
