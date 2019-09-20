@@ -1,87 +1,20 @@
-# FMCW
-Based on initial & ongoing work by Henrik Forstén/[@Ttl](https://github.com/Ttl/).
+# Lazy prices: an NLP strategy to investing
 
-Documentation in progress at [Read The Docs](https://fmcw.readthedocs.io/en/latest/)
+Investing strategies can be extremely complex. Using advanced mathematical models, investors try relentlessly to "Beat the Street" and gain on edge on each other. One piece of this puzzle are the 10-X filings that listed companies submit at the end of each quarter to report on their operations. They contain a wealth of quantitative information on their financial health. 
 
-## Generalities
-### Version convention
-Releases have a version number in the following format:
-X.YYY.ZZZ
-- X is the hardware version.
-- YYY is the release version
-- ZZZ is the minor update version
+Unfornately, they have gotten longer and longer over time, which makes reading one a daunting task. From the boilerplate text to incomplete sections, their usefulness has substantially decreased. But has it?
 
-### History
-The FMCW package is a library designed to interact at a high level with the fmcw radar from Henrik Forstén/[@Ttl](https://github.com/Ttl/). If you are not familiar with it, start with taking a look at Henrik's blog post on the third version of the radar:
-[FMCW 3](http://hforsten.com/third-version-of-homemade-6-ghz-fmcw-radar.html)
-
-For additional information on this type of radar, you can also take a look at the previous blog posts written by Henrik. These older radars are not be compatible with this library but can help shine some light on radar theory and the history of the project:
-- [FMCW 1](http://hforsten.com/6-ghz-frequency-modulated-radar.html)
-- [FMCW 2](http://hforsten.com/homemade-synthetic-aperture-radar.html)
-
-Additionnaly, Henrik's fmcw project was covered in a few articles. For instance:
-- [Hackaday coverage](https://hackaday.com/2017/10/11/homemade-6ghz-radar-v3/)
-
-### Where to get an fmcw3?
-Short answer: you have to make it yourself.
-
-Longer answer: only a few boards seem to have been made so far, all based on the files that Henrik uploaded on his GitHub repository.
-If you plan on building one, make sure you have:
-1. proper hardware to place the components & reflow them
-2. 200+ hours ahead of you (**VERY** dependant on your existing knowledge)
-3. ~$500
-
-Of course, these are rules of thumbs and should not be taken at face value.
-
-### I have an fmcw3, what should I do next?
-Congratulations! There are two main options:
-1. You write your own script based on the library. This is expected to be hard as the documentation is lagging behind the code I write.
-2. You reuse the latest release I have for the main script. This is the recommended option.
-
-In what follows, I will describe how I use the library with **190830\_rt\_fmcw3.py**, uploaded with release 3.1.ZZZ.
+In this project, I attempt to disregard all financial data in the 10-X and build a virtual portfolio of companies based only on text. Let's see how that performs!
 
 
-## Description of the flow
-Four main tasks are being executed by the script:
-1. Read the data from the FPGA
-2. Process the data
-3. Save the data to file
-4. Display the data in real time
+Loosely based on:
 
-### Architecture
-A picture is better than a thousand words so here is a schematic:
-![Architecture](https://i.ibb.co/Xt5Ffch/Architecture.png)
+Cohen, Lauren and Malloy, Christopher J. and Nguyen, Quoc, Lazy Prices (March 7, 2019). 2019 Academic Research Colloquium for Financial Planning and Related Disciplines.
 
-### Read the data from the FPGA
-This step is less easy than it sounds for a simple the reason: the FPGA is a real time chip while everything else (the usb port, the OS on my laptop, python...) is not. As a result, the FPGA outputs data are fixed intervals and if anything down the chain is not ready to receive it, the 4 kb buffers on the FTDI chip will quickly overflow and be overwritten. I have not found a silver bullet for that problem so far and only managed to mitigate it. 
+Available at SSRN: [https://ssrn.com/abstract=1658471](https://ssrn.com/abstract=1658471)
 
-See here for more information:
-[Stack Overflow](https://stackoverflow.com/questions/57592288/pylibftdi-device-read-skips-some-bytes/57600370?noredirect=1#comment101895577_57600370)
 
-### Process the data
-The data coming from the FPGA is parsed to separate it in sweeps. Valid sweeps are then processed in order to display 3 types charts in real time. Invalid sweeps (most of the time incomplete sweeps due to dropped bytes on the USB bus) are zeroed and displayed as such.
+## What is EDGAR (from the SEC's website)?
+EDGAR is the Electronic Data Gathering, Analysis, and Retrieval system used at the U.S. Securities and Exchange Commission (SEC). EDGAR is the primary system for submissions by companies and others who are required by law to file information with the SEC. 
 
-### Save the data to file
-Threads are used to write the data to file. A total of three threads are spawned from the main process:
-1. One for writing the settings to file. Note that it is immediately closed after writing to file.
-2. One to write the raw, byte data to a text file.
-3. One to write the processed data to a csv file.
-
-### Display the data in real time
-The main script offers the option to display data in real time. But there is no such thing as perfect real time: there is always a lag. Depending on how many sweeps you read at once from the USB port before processing, and how long these sweeps are, the lag can be increased or reduced.
-With the default settings, the lag is a few hundred ms.
-
-The refresh rate is also severly limited on most laptop given the amount of work needed to refresh a plot that can have tens of thousands of pixels on it. Despite minimizing the amount of elements to refresh when updating a plot and keeping each plot in a separate subprocess, 10 Hz appears to be the maximum refresh rate on my CPU (i7-8565U).
-
-Below, a few examples of the displayed plots:
-![IF signal](https://i.ibb.co/JyPQQCg/IF-signal.png)
-![Angle plot](https://i.ibb.co/vm1McyL/Angle.png)
-![Range time plot](https://i.ibb.co/6ycCxZy/Range-time.png)
-
-## Technical considerations
-### Batch processing
-Here is quick description of how a batch of data is processed.
-![Batch processing](https://i.ibb.co/18sv7S8/while-loop.png)
-Feel like this is cryptic? It is. 
-In a nutshell, the point is to mitigate the non-real time nature of the script as much as possible. It is not perfect and some data will be lost, but these days less than 5% is lost.
-If you ever want to learn more just reach out to me.
+Containing millions of company and individual filings, EDGAR benefits investors, corporations, and the U.S. economy overall by increasing the efficiency, transparency, and fairness of the securities markets. The system processes about 3,000 filings per day, serves up 3,000 terabytes of data to the public annually, and accommodates 40,000 new filers per year on average.
