@@ -1,8 +1,17 @@
-# sec-scrapper
-An Insight DE project.
+# Lazy prices: an NLP strategy to investing
 
-The goal of this project is to parse 10-Ks, 10-Qs, 8-Ks from the SEC and run some mainstream NLP algorithm to study sentiments on it.
-Results are expected to be compared against the VIX and see if they correlate.
+Investing strategies can be extremely complex. Using advanced mathematical models, investors try relentlessly to "Beat the Street" and gain on edge on each other. One piece of this puzzle are the 10-X filings that listed companies submit at the end of each quarter to report on their operations. They contain a wealth of quantitative information on their financial health. 
+
+Unfornately, they have gotten longer and longer over time, which makes reading one a daunting task. From the boilerplate text to incomplete sections, their usefulness has substantially decreased. But has it?
+
+In this project, I attempt to disregard all financial data in the 10-X and build a virtual portfolio of companies based only on text. Let's see how that performs!
+
+
+Loosely based on:
+
+Cohen, Lauren and Malloy, Christopher J. and Nguyen, Quoc, Lazy Prices (March 7, 2019). 2019 Academic Research Colloquium for Financial Planning and Related Disciplines.
+
+Available at SSRN: [https://ssrn.com/abstract=1658471](https://ssrn.com/abstract=1658471)
 
 
 ## What is EDGAR (from the SEC's website)?
