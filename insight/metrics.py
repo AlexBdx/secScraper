@@ -18,30 +18,29 @@ import os
 import csv
 from datetime import datetime
 import re
-import Load_MasterDictionary as LM
 import string
 
 # # Metrics
 
 # ## Jaccard similarities
 
-def sim_jaccard(str1, str2): 
+def diff_jaccard(str1, str2): 
     a = set(str1.split()) 
     b = set(str2.split())
     c = a.intersection(b)
     return float(len(c)) / (len(a) + len(b) - len(c))
 
-def test_sim_jaccard():
+def test_diff_jaccard():
     Da = "We expect demand to increase."
     Db = "We expect worldwide demand to increase."
     Dc = "We expect weakness in sales."
-    test1 = sim_jaccard(Da, Db)
-    test2 = sim_jaccard(Da, Dc)
+    test1 = diff_jaccard(Da, Db)
+    test2 = diff_jaccard(Da, Dc)
     assert round(test1, 2) == 0.83
     assert round(test2, 2) == 0.25
     return True
 
-# test_sim_jaccard()
+# test_diff_jaccard()
 
 
 # ## TF & TF-IDF similarities (cosine similarities)
@@ -50,23 +49,23 @@ def test_sim_jaccard():
 
 
 # Cosine similarity
-def sim_cosine(str1, str2):
+def diff_cosine(str1, str2):
     vect = TfidfVectorizer(use_idf=False)  # Per paper
     tfidf = vect.fit_transform([str1, str2])
     tfidf_similarity = tfidf * tfidf.T
     return float(tfidf_similarity[0, 1])
 
-def test_sim_cosine():
+def test_diff_cosine():
     Da = "We expect demand to increase."
     Db = "We expect worldwide demand to increase."
     Dc = "We expect weakness in sales."
-    test1 = sim_cosine(Da, Db)
-    test2 = sim_cosine(Da, Dc)
+    test1 = diff_cosine(Da, Db)
+    test2 = diff_cosine(Da, Dc)
     assert round(test1, 2) == 0.91
     assert round(test2, 2) == 0.40
     return True
 
-# test_sim_cosine()
+# test_diff_cosine()
 
 
 # ## Sequence modifications
@@ -74,7 +73,7 @@ def test_sim_cosine():
 # In[11]:
 
 
-def sim_minEdit(str1, str2):
+def diff_minEdit(str1, str2):
     """
     This is character based.
     WARNING: VERY SLOW BEYOND ~10,000 CHAR TO COMPARE"""
@@ -84,26 +83,27 @@ def sim_minEdit(str1, str2):
     transformations = f.get_opcodes()  # Impossible to compute for larger texts
     transformations = [t for t in transformations if t[0] != 'equal']
     similarity = 1-len(transformations)/(count_words_str1+count_words_str1)
+    similarity = abs(similarity)  # Prevent it from being negative
     # similarity = f.ratio()
     return similarity
 
-def test_sim_minEdit():
+def test_diff_minEdit():
     Da = "We expect demand to increase."
     Db = "We expect worldwide demand to increase."
     Dc = "We expect weakness in sales."
-    test1 = sim_minEdit(Da, Db)
-    test2 = sim_minEdit(Da, Dc)
+    test1 = diff_minEdit(Da, Db)
+    test2 = diff_minEdit(Da, Dc)
     assert round(test1, 2) == 0.90
     assert round(test2, 2) == 0.30
     return True
 
-# test_sim_minEdit()
+# test_diff_minEdit()
 
 
 # In[26]:
 
 
-def sim_simple(str1, str2):
+def diff_simple(str1, str2):
     """This is word based
     WARNING: VERY SLOW BEYOND ~10,000 CHAR TO COMPARE"""
     d = difflib.Differ()
@@ -114,50 +114,49 @@ def sim_simple(str1, str2):
     similarity = 1-len(comparison)/(len(str1) + len(str2))
     return similarity
 
-def test_sim_simple():
+def test_diff_simple():
     Da = "We expect demand to increase."
     Db = "We expect worldwide demand to increase."
     Dc = "We expect weakness in sales."
-    test1 = sim_simple(Da, Db)
-    test2 = sim_simple(Da, Dc)
+    test1 = diff_simple(Da, Db)
+    test2 = diff_simple(Da, Dc)
     assert round(test1, 2) == 0.85
     assert round(test2, 2) == 0.67
     return True
 
-# test_sim_simple()
+# test_diff_simple()
 
 """Sentiment analysis"""
-MASTER_DICTIONARY_FILE = r'LoughranMcDonald_MasterDictionary_2018.csv'
-OUTPUT_FIELDS = ['file type', 'file size', 'number of words', '% positive', '% negative',
+def composite_index(data):
+    """Create a composite index based on the sentiment output"""
+    OUTPUT_FIELDS = ['file type', 'file size', 'number of words', '% positive', '% negative',
                  '% uncertainty', '% litigious', '% modal-weak', '% modal moderate',
                  '% modal strong', '% constraining', '# of alphabetic', '# of digits',
                  '# of numbers', 'avg # of syllables per word', 'average word length', 'vocabulary']
-lm_dictionary = LM.load_masterdictionary(MASTER_DICTIONARY_FILE, True)
-def sim_sentiment(text):
-    """Create a composite index based on the sentiment output"""
-    # Warning: Values are in absolute value
-    data = sentiment(text)
+
     #print(data)
-    # Sign will be of positive + negative proportion. Will be dialed down based on neutrals
-    if (data[3]+data[4]+data[5]+data[6]):
-        composite_index = (data[3]-data[4]-data[6])/(data[3]+data[4]+data[5]+data[6])
+    # Sign will be of positive + negative proportion. Averaged by number of words.
+    if (data[2] + data[3] + data[4]):
+        composite_index = (data[3]-data[4])/data[2]
     else:  # Avoid the case when the text is too short and a div per zero error is thrown
         composite_index = 0
     
     return composite_index
 
 
-def sentiment(text):
+def sing_sentiment(text, lm_dictionary):
     text_len = len(text)
     text = re.sub('(May|MAY)', ' ', text)  # drop all May month references ## lol
     text = text.upper()  # for this parse caps aren't informative so shift
-    output_data = get_data(text)
+    output_data = get_data(text, lm_dictionary)
     output_data[0] = type(text)
     output_data[1] = text_len
-    return output_data
+    result = composite_index(output_data)
+    
+    return result
 
 # Helper function - should not be accessed from the outside
-def get_data(doc):
+def get_data(doc, lm_dictionary):
     vdictionary = {}
     _odata = [0] * 17
     total_syllables = 0

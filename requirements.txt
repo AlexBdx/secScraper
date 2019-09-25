@@ -4,3 +4,6 @@ tqdm
 matplotlib>=3
 vaderSentiment
 numpy>=1.16
+sklearn
+termcolor
+pandas
