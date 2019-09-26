@@ -1,5 +1,5 @@
 import csv
-import Load_MasterDictionary as LM
+
 from tqdm import tqdm
 from datetime import datetime
 import time
@@ -149,6 +149,26 @@ def load_stock_data(s, verbose=False):
                 else:
                     raise ValueError('[ERROR] Unknown type of price for this stock')
     return data
+
+# 4. Load the main indexes tables
+def load_index_data(s):
+    # 1. Find all the indexes in the folder
+    file_list = glob.glob(s['path_stock_indexes']+'**/*.csv', recursive=True)
+    index_names = [f.split('/')[-1][14:-4] for f in file_list]
+    paths = zip(file_list, index_names)
+    
+    # 2. Open all these files and add the data to a dictionary
+    index_data = {k: [] for k in index_names}
+    for path in paths:
+        with open(path[0]) as f:
+            reader = csv.reader(f)
+            header = next(reader)  # Skip the header
+            idx_date = header.index("Date")
+            idx_closing = header.index("Close")
+            for row in reader:
+                date = datetime.strptime(row[idx_date], '%Y-%m-%d').date()
+                index_data[path[1]].append([date, float(row[1])])  # Load all
+    return index_data
 
 def intersection_lookup_stock(lookup, stock):
     # 1. Create unique lists to compare
@@ -432,11 +452,4 @@ def dump_tickers_crsp(path_dump_file, tickers):
         for ticker in tickers:
             out.writerow([ticker])
 
-def normalize_texts(current_text, previous_text):
-    """Remove all extra spaces, \n and \t that could be left and substitute by a single whitespace.
-    """
-    return " ".join(current_text.split()), " ".join(previous_text.split())
 
-def load_master_dictionary(path):
-    lm_dictionary = LM.load_masterdictionary(path, True)
-    return lm_dictionary

@@ -20,6 +20,10 @@ from datetime import datetime
 import re
 import string
 
+print(glob.glob('*'))
+print(os.getcwd())
+import Load_MasterDictionary as LM
+
 # # Metrics
 
 # ## Jaccard similarities
@@ -149,9 +153,15 @@ def composite_index(data):
         composite_index = 0
     
     return composite_index
+    
+path = 'LoughranMcDonald_MasterDictionary_2018.csv'  # Local file
+try:
+    lm_dictionary = LM.load_masterdictionary(path, True)
+except:
+    print("[ERROR] Please verifiy the name of the dictionary and make sure it is in the folder")
+    raise
 
-
-def sing_sentiment(text, lm_dictionary):
+def sing_sentiment(text):
     text_len = len(text)
     text = re.sub('(May|MAY)', ' ', text)  # drop all May month references ## lol
     text = text.upper()  # for this parse caps aren't informative so shift
