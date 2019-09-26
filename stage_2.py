@@ -58,8 +58,8 @@ _s = {
     'time_range': [(2010, 1), (2012, 4)],
     'bin_count': 5,
     'report_type': ['10-K', '10-Q'],
-    'sections_to_parse_10k': [],
-    'sections_to_parse_10q': [],
+    'sections_to_parse_10k' = [],
+    'sections_to_parse_10q' = [],
     'type_daily_price': 'closing'
 }
 

@@ -48,9 +48,16 @@ def test_diff_jaccard():
 # In[9]:
 
 
-# Cosine similarity
-def diff_cosine(str1, str2):
+# Cosine similarity TF
+def diff_cosine_tf(str1, str2):
     vect = TfidfVectorizer(use_idf=False)  # Per paper
+    tf = vect.fit_transform([str1, str2])
+    tf_similarity = tf * tf.T
+    return float(tf_similarity[0, 1])
+
+# Cosine similarity TF-IDF
+def diff_cosine_tf_idf(str1, str2):
+    vect = TfidfVectorizer(use_idf=True)  # Activate TF-IDF
     tfidf = vect.fit_transform([str1, str2])
     tfidf_similarity = tfidf * tfidf.T
     return float(tfidf_similarity[0, 1])
