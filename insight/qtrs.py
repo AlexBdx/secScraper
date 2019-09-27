@@ -176,3 +176,45 @@ def display_download_stats(stats):
             text.append(key + ": {:,}".format(stats[key]))   
     print("[INFO] " + " | ".join(text))
 
+def previous_qtr(qtr, s):
+    # For once, a self-explanatory function name!
+    idx = s['list_qtr'].index(qtr)
+    if idx == 0:
+        raise ValueError('[ERROR] This is the first quarter in the time_range')
+    else:
+        return s['list_qtr'][idx-1]
+
+def test_previous_qtr():
+    s = dict()
+    s['list_qtr'] = [(2010, k) for k in range(1, 5)] + [(2011, k) for k in range(1, 5)]
+    test1 = previous_qtr((2011, 1), s)
+    assert test1 == (2010, 4)
+    test2 = previous_qtr((2011, 4), s)
+    assert test2 == (2011, 3)
+    return True
+# test_previous_qtr()
+
+def qtr_to_day(qtr, position, date_format='string'):
+    # Dumb function that returns the first or last day in a quarter.
+    # WARNING: Last day is not necessarily a real calendar day.
+    # WARNING: On that day the stock exchange was not necessarily open
+    if position == 'first':
+        result = "{}{}{}".format(str(qtr[0]), str(((qtr[1])-1)*3+1).zfill(2), '01')
+    elif position == 'last':
+        result = "{}{}{}".format(str(qtr[0]), str(((qtr[1]))*3).zfill(2), '31')
+    else:
+        raise ValueError('[ERROR] Only first and last day of quarter are supported')
+    
+    if date_format == 'datetime':
+        result = datetime.strptime(result, '%Y%m%d').date()
+    return result
+
+def test_qtr_to_day():
+    test1 = qtr_to_day((2008, 1), 'first', date_format='string')
+    assert test1 == '20080101'
+    test2 = qtr_to_day((2005, 4), 'last', date_format='string')
+    assert test2 == '20051231'
+    return True
+
+# test_qtr_to_day()
+

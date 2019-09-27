@@ -20,6 +20,10 @@ from datetime import datetime
 import re
 import string
 
+print(glob.glob('*'))
+print(os.getcwd())
+import Load_MasterDictionary as LM
+
 # # Metrics
 
 # ## Jaccard similarities
@@ -48,9 +52,16 @@ def test_diff_jaccard():
 # In[9]:
 
 
-# Cosine similarity
-def diff_cosine(str1, str2):
+# Cosine similarity TF
+def diff_cosine_tf(str1, str2):
     vect = TfidfVectorizer(use_idf=False)  # Per paper
+    tf = vect.fit_transform([str1, str2])
+    tf_similarity = tf * tf.T
+    return float(tf_similarity[0, 1])
+
+# Cosine similarity TF-IDF
+def diff_cosine_tf_idf(str1, str2):
+    vect = TfidfVectorizer(use_idf=True)  # Activate TF-IDF
     tfidf = vect.fit_transform([str1, str2])
     tfidf_similarity = tfidf * tfidf.T
     return float(tfidf_similarity[0, 1])
@@ -75,15 +86,19 @@ def test_diff_cosine():
 
 def diff_minEdit(str1, str2):
     """
-    This is character based.
+    This is word based.
     WARNING: VERY SLOW BEYOND ~10,000 CHAR TO COMPARE"""
     f = difflib.SequenceMatcher(None, a=str1, b=str2)
     count_words_str1 = len(re.compile(r'\w+').findall(str1))
     count_words_str2 = len(re.compile(r'\w+').findall(str2))
     transformations = f.get_opcodes()  # Impossible to compute for larger texts
     transformations = [t for t in transformations if t[0] != 'equal']
-    similarity = 1-len(transformations)/(count_words_str1+count_words_str1)
-    similarity = abs(similarity)  # Prevent it from being negative
+    similarity = 1-len(transformations)/(count_words_str1+count_words_str2)
+    similarity = abs(similarity)
+    #if similarity > 1:
+        #print(len(transformations), count_words_str1, count_words_str2)
+        #raise
+    similarity = min(1, abs(similarity))  # Prevent it from being negative
     # similarity = f.ratio()
     return similarity
 
@@ -104,11 +119,11 @@ def test_diff_minEdit():
 
 
 def diff_simple(str1, str2):
-    """This is word based
+    """This is character based
     WARNING: VERY SLOW BEYOND ~10,000 CHAR TO COMPARE"""
     d = difflib.Differ()
-    count_words_str1 = len(re.compile(r'\w+').findall(str1))
-    count_words_str2 = len(re.compile(r'\w+').findall(str2))
+    #count_words_str1 = len(re.compile(r'\w+').findall(str1))
+    #count_words_str2 = len(re.compile(r'\w+').findall(str2))
     comparison = list(d.compare(str1, str2))
     comparison = [change for change in comparison if change[0] != ' ']
     similarity = 1-len(comparison)/(len(str1) + len(str2))
@@ -142,9 +157,15 @@ def composite_index(data):
         composite_index = 0
     
     return composite_index
+    
+path = 'LoughranMcDonald_MasterDictionary_2018.csv'  # Local file
+try:
+    lm_dictionary = LM.load_masterdictionary(path, True)
+except:
+    print("[ERROR] Please verifiy the name of the dictionary and make sure it is in the folder")
+    raise
 
-
-def sing_sentiment(text, lm_dictionary):
+def sing_sentiment(text):
     text_len = len(text)
     text = re.sub('(May|MAY)', ' ', text)  # drop all May month references ## lol
     text = text.upper()  # for this parse caps aren't informative so shift

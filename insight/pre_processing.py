@@ -1,5 +1,5 @@
 import csv
-import Load_MasterDictionary as LM
+
 from tqdm import tqdm
 from datetime import datetime
 import time
@@ -150,6 +150,26 @@ def load_stock_data(s, verbose=False):
                     raise ValueError('[ERROR] Unknown type of price for this stock')
     return data
 
+# 4. Load the main indexes tables
+def load_index_data(s):
+    # 1. Find all the indexes in the folder
+    file_list = glob.glob(s['path_stock_indexes']+'**/*.csv', recursive=True)
+    index_names = [f.split('/')[-1][14:-4] for f in file_list]
+    paths = zip(file_list, index_names)
+    
+    # 2. Open all these files and add the data to a dictionary
+    index_data = {k: [] for k in index_names}
+    for path in paths:
+        with open(path[0]) as f:
+            reader = csv.reader(f)
+            header = next(reader)  # Skip the header
+            idx_date = header.index("Date")
+            idx_closing = header.index("Close")
+            for row in reader:
+                date = datetime.strptime(row[idx_date], '%Y-%m-%d').date()
+                index_data[path[1]].append([date, float(row[1])])  # Load all
+    return index_data
+
 def intersection_lookup_stock(lookup, stock):
     # 1. Create unique lists to compare
     unique_lookup = set(list(lookup.values()))
@@ -275,7 +295,20 @@ def review_cik_publications(cik_path, s, verbose=False):
     cik_dict = {k: v for k, v in cik_path.items() if k not in cik_to_delete}
     
     return cik_dict
-
+def check_report_type(quarterly_submissions, qtr):
+    if quarterly_submissions[qtr][0]['type'] == '10-K':
+        if qtr[1] == 1:
+            return True
+        else:
+            return False
+    elif quarterly_submissions[qtr][0]['type'] == '10-Q':
+        if qtr[1] == 2 or qtr[1] == 3 or qtr[1] == 4:
+            return True
+        else:
+            return False
+    else:
+        raise ValueError('[ERROR] Only 10-K and 10-Q supported.')
+    
 def check_report_continuity(quarterly_submissions, s):
     # Verify that the sequence is 0-...0-1-...-1-0-...-0
     flag_success, qtr = find_first_listed_qtr(quarterly_submissions, s)
@@ -285,11 +318,15 @@ def check_report_continuity(quarterly_submissions, s):
         return False
         #raise ValueError('Could not find the first quarter, they seem all empty.')
     
-    # Now we start going through the reports. There shall only be one
+    # Now we start going through the submissions for each qtr. There shall only be one.
     idx = s['list_qtr'].index(qtr)
     for qtr in s['list_qtr'][idx:]:
         if len(quarterly_submissions[qtr]) == 1:
-            continue
+            # Verify that 10-K are published in Q1 only and 10-Q in Q2-3-4
+            if check_report_type(quarterly_submissions, qtr):
+                continue
+            else:
+                return False
         elif len(quarterly_submissions[qtr]) == 0:  # Has it been delisted?
             flag_is_delisted = is_permanently_delisted(quarterly_submissions, qtr, s)
             #print("Returned {} because flag_is_delisted is {}".format(flag_is_delisted, flag_is_delisted))
@@ -432,11 +469,4 @@ def dump_tickers_crsp(path_dump_file, tickers):
         for ticker in tickers:
             out.writerow([ticker])
 
-def normalize_texts(current_text, previous_text):
-    """Remove all extra spaces, \n and \t that could be left and substitute by a single whitespace.
-    """
-    return " ".join(current_text.split()), " ".join(previous_text.split())
 
-def load_master_dictionary(path):
-    lm_dictionary = LM.load_masterdictionary(path, True)
-    return lm_dictionary

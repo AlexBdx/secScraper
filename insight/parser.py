@@ -320,9 +320,8 @@ class stage_2_parser():
             # 1.2. Create the regex
             pattern = []
             for key in titles:
-                #regex = 'item {}[\.\-\: ]*'.format(title[0])+title[1]
                 prefix = r'([\n\r] ?| {2,})'  # Is {3,} better?
-                suffix = r'(?![a-z0-9\[\]\(\)])[\.\- \,][ \n]*'
+                suffix = r'(?![a-z0-9\[\]\(\)])[\.\- ][ \n]*'
                 regex = r'{}item {}{}{}'.format(prefix, key, suffix, titles[key].split()[0])
                 #regex = r'{}item {}{}{}'.format(prefix, title[0], suffix, title[1])
                 pattern.append(regex)
@@ -346,37 +345,64 @@ class stage_2_parser():
                 #else:
                     #res[section_number_found[0]].append(m.span())
             
-            # Find the corresponding section
-            corresponding_section = 0
-            for k, v in titles.items():
-                if v.split()[0] == last_word[0]:
-                    corresponding_section = k
-                    break
-            if corresponding_section == 0:
-                print(last_word)
-                raise ValueError("[ERROR] Could not find where |{}| goes".format(last_word[0]))
-            else:
-                res[corresponding_section].append(m.span())
-            
+                # Find the corresponding section
+                corresponding_section = 0
+                for k, v in titles.items():
+                    if v.split()[0] == last_word[0]:
+                        corresponding_section = k
+                        break
+                if corresponding_section == 0:
+                    print(last_word)
+                    raise ValueError("[ERROR] Could not find where |{}| goes".format(last_word[0]))
+                else:
+                    res[corresponding_section].append(m.span())
             
             # II. Now we get serious. Purge the ToC of it exists
             if verbose:
                 print("[INFO] Before removing the toc:", res)
+            original_res = copy.deepcopy(res)
+            res = {k: v for k, v in res.items() if len(v)}
             # Extract the Table of Content, if any
             # The gist is that if it exists, all the populated keys should follow each other in order
-            #print(all_sections_10k)
+            # print(all_sections_10q)
+            # Remove the sections that are empty so we can iterate over non-zero sections
             
-            # Need to improve this section
-            # - Item 1 is always found so if there is a toc for it, there is a toc for every section present in
-            # the report
-            # - 
+
+            # Hypothesis: 1a is not optional - financial statements should not be
+            # if I.1. has two entries and the second is after the 1st last entry -> toc!
+            # then rm all [0] entries, then re-delete all zero entries
+            # else no toc and do nothing
+            full_sect = list(res.keys())
+            # Make sure you got something. If that is not the case, might just be a completely different template.
+            try:
+                assert len(full_sect)
+            except:
+                print("[ERROR] Here is full_sect: |{}|".format(full_sect))
+                print("[ERROR] Original res:", original_res)
+                raise
+            
+            if len(res[full_sect[0]]) >= 2:
+                if res[full_sect[-1]][0][1] < res[full_sect[0]][1][0]:
+                    # There is a toc!
+                    print("[INFO] Found a ToC!")
+                    for v in res.values(): # Iterate through all the sections
+                        del v[0]  # Remove all first titles found - they are the ToC
+                    res = {k: v for k, v in res.items() if len(v)}
+            else:
+                print("[INFO] No ToC found")
+            
+            # Extra step: make sure the first elements go in increasing order.
+            try:
+                res = clean_first_markers(res)
+            except:
+                print("This is the res", res)
+                raise
+            
+            if verbose:
+                    print("[INFO] After removing the toc:", res)
+            """
             for idx in range(len(all_sections_10k)-1):
                 # Check that both are populated
-                """
-                print("Looking at {} and {} | length are {} and {}"
-                      .format(all_sections_10k[idx], all_sections_10k[idx+1],
-                              len(res[all_sections_10k[idx]]), len(res[all_sections_10k[idx+1]])))
-                """
                 if len(res[all_sections_10k[idx]]) >= 2:
                     if len(res[all_sections_10k[idx+1]]) >= 2:
                         # You only look at the first tuple in the list as things were found in order (left to right)
@@ -407,9 +433,10 @@ class stage_2_parser():
                               .format(all_sections_10k[idx], len(res[all_sections_10k[idx]])))
             if verbose:
                 print("[INFO] After removing the toc:", res)
+            """
             finds = [len(value) for value in res.values()]
             #print(finds)
-            #assert 0
+
             
             """
             # Remove the sections that are empty
@@ -430,19 +457,20 @@ class stage_2_parser():
             
             #print(intersection)
             
-            #assert 0
+
             
             if intersection != sections_to_parse_10k:  # Not all self.s['sections_to_parse_10k'] could be found
                 raise ValueError('[ERROR] Impossible to parse {} as not all of these were identified in the text.'
                                  .format(sections_to_parse_10k[ii]))
             """
             # Remove the sections that are empty so we can iterate over non-zero sections
-            all_sections_10k = [k for k in all_sections_10k if len(res[k])]
+            all_sections_10k = [k for k in all_sections_10k if k in res.keys()]
+            #print(res)
             
             # Find the start & stop of each section 
             previous_start = 0
             for idx in range(len(all_sections_10k)-1):
-                if all_sections_10k[idx] in sections_to_parse_10k:  # Did we request to parse this section?
+                if all_sections_10k[idx] in self.s['sections_to_parse_10k']:  # Did we request to parse this section?
                     start = 0  # used for the data extraction
                     stop = 0
                     for span in res[all_sections_10k[idx]]:  # Go through all the titles found, in order
@@ -492,7 +520,7 @@ class stage_2_parser():
                     
                 
                 
-                #assert 0
+
         else:
             raise ValueError('[ERROR] No stage 2 parser for report type {}!'.format(parsed_report['0']['type']))
         
@@ -543,5 +571,9 @@ def test_clean_first_markers():
  'ii_5': [(71623, 71637)],
  'ii_6': [(71685, 71702)]}
     return True
+
+# test_clean_first_markers()
+
+
 
 # test_clean_first_markers()
