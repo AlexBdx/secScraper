@@ -86,15 +86,19 @@ def test_diff_cosine():
 
 def diff_minEdit(str1, str2):
     """
-    This is character based.
+    This is word based.
     WARNING: VERY SLOW BEYOND ~10,000 CHAR TO COMPARE"""
     f = difflib.SequenceMatcher(None, a=str1, b=str2)
     count_words_str1 = len(re.compile(r'\w+').findall(str1))
     count_words_str2 = len(re.compile(r'\w+').findall(str2))
     transformations = f.get_opcodes()  # Impossible to compute for larger texts
     transformations = [t for t in transformations if t[0] != 'equal']
-    similarity = 1-len(transformations)/(count_words_str1+count_words_str1)
-    similarity = abs(similarity)  # Prevent it from being negative
+    similarity = 1-len(transformations)/(count_words_str1+count_words_str2)
+    similarity = abs(similarity)
+    #if similarity > 1:
+        #print(len(transformations), count_words_str1, count_words_str2)
+        #raise
+    similarity = min(1, abs(similarity))  # Prevent it from being negative
     # similarity = f.ratio()
     return similarity
 
@@ -115,11 +119,11 @@ def test_diff_minEdit():
 
 
 def diff_simple(str1, str2):
-    """This is word based
+    """This is character based
     WARNING: VERY SLOW BEYOND ~10,000 CHAR TO COMPARE"""
     d = difflib.Differ()
-    count_words_str1 = len(re.compile(r'\w+').findall(str1))
-    count_words_str2 = len(re.compile(r'\w+').findall(str2))
+    #count_words_str1 = len(re.compile(r'\w+').findall(str1))
+    #count_words_str2 = len(re.compile(r'\w+').findall(str2))
     comparison = list(d.compare(str1, str2))
     comparison = [change for change in comparison if change[0] != ' ']
     similarity = 1-len(comparison)/(len(str1) + len(str2))

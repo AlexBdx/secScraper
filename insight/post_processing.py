@@ -83,7 +83,7 @@ def get_pf_value(pf_scores, m, mod_bin, qtr, lookup, stock_data, s):
 def calculate_portfolio_value(pf_scores, pf_values, lookup, stock_data, s):
     for m in s['metrics'][:-1]:
         for mod_bin in s['bin_labels']:
-            for qtr in s['list_qtr'][1:]: 
+            for qtr in s['list_qtr'][s['lag']:]: 
                 # Here we have an array of arrays [cik, score, nb_shares_unbalanced, nb_shares_balanced]
                 # 1. Unbalanced portfolio: everyone get the same amount of shares
                 # 1.1 Get number of CIK
@@ -91,7 +91,7 @@ def calculate_portfolio_value(pf_scores, pf_values, lookup, stock_data, s):
                 total_mc = 0
                 
                 # Update pf value!
-                if qtr == s['list_qtr'][1]:
+                if qtr == s['list_qtr'][s['lag']]:
                     pf_value = s['pf_init_value']
                 else:
                     pf_value_unbalanced, pf_value_balanced = get_pf_value(pf_scores, m, mod_bin, qtr, lookup, stock_data, s)

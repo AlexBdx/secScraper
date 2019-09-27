@@ -295,7 +295,20 @@ def review_cik_publications(cik_path, s, verbose=False):
     cik_dict = {k: v for k, v in cik_path.items() if k not in cik_to_delete}
     
     return cik_dict
-
+def check_report_type(quarterly_submissions, qtr):
+    if quarterly_submissions[qtr][0]['type'] == '10-K':
+        if qtr[1] == 1:
+            return True
+        else:
+            return False
+    elif quarterly_submissions[qtr][0]['type'] == '10-Q':
+        if qtr[1] == 2 or qtr[1] == 3 or qtr[1] == 4:
+            return True
+        else:
+            return False
+    else:
+        raise ValueError('[ERROR] Only 10-K and 10-Q supported.')
+    
 def check_report_continuity(quarterly_submissions, s):
     # Verify that the sequence is 0-...0-1-...-1-0-...-0
     flag_success, qtr = find_first_listed_qtr(quarterly_submissions, s)
@@ -305,11 +318,15 @@ def check_report_continuity(quarterly_submissions, s):
         return False
         #raise ValueError('Could not find the first quarter, they seem all empty.')
     
-    # Now we start going through the reports. There shall only be one
+    # Now we start going through the submissions for each qtr. There shall only be one.
     idx = s['list_qtr'].index(qtr)
     for qtr in s['list_qtr'][idx:]:
         if len(quarterly_submissions[qtr]) == 1:
-            continue
+            # Verify that 10-K are published in Q1 only and 10-Q in Q2-3-4
+            if check_report_type(quarterly_submissions, qtr):
+                continue
+            else:
+                return False
         elif len(quarterly_submissions[qtr]) == 0:  # Has it been delisted?
             flag_is_delisted = is_permanently_delisted(quarterly_submissions, qtr, s)
             #print("Returned {} because flag_is_delisted is {}".format(flag_is_delisted, flag_is_delisted))
