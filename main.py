@@ -5,7 +5,7 @@
 
 # ## Packages to import
 
-# In[2]:
+# In[1]:
 
 
 def run_from_ipython():
@@ -47,6 +47,11 @@ from collections import OrderedDict
 import time
 import pandas as pd
 import argparse
+
+# Spark
+import findspark
+findspark.init('/home/alex/spark-2.4.4-bin-hadoop2.7')
+import pyspark
 
 
 # ### Set the nb of processes to use based on cmd line arguments/setting
@@ -293,7 +298,17 @@ cik_path.keys()
 # 
 # We use multiprocessing to go through N CIK at once but a single core is dedicated to going through a given CIK for the specified time_range. Such a core can be running for a while if the company has been in business for the whole time_range and publish a lot of text data in its 10-K.
 
-# In[18]:
+# In[24]:
+
+
+try:
+    sc.stop()
+except:
+    pass
+nb_processes_requested = 0
+
+
+# In[26]:
 
 
 # Processing the reports will be done in parrallel in a random order
@@ -325,7 +340,8 @@ if nb_processes_requested > 1:
                 else:
                     cik_scores[value[0]] = value[1]
                 processing_stats[value[2]] += 1
-else:
+
+elif nb_processes_requested == 1:
     print("[INFO] Running on {} core (multiprocessing is off)".format(nb_processes_requested))
     with tqdm(total=len(data_to_process)) as pbar:
         for i, value in tqdm(enumerate(map(processing.process_cik, data_to_process))):
@@ -338,7 +354,28 @@ else:
             else:
                 cik_scores[value[0]] = value[1]
             processing_stats[value[2]] += 1
-        
+
+elif nb_processes_requested == 0:
+    # Spark mode!!
+    print("[INFO] Running with Spark")
+    sc = pyspark.SparkContext(appName="model_calculations")
+    print("[INFO] Context started")
+    spark_result = sc.parallelize(data_to_process).map(processing.process_cik)
+    spark_result = spark_result.take(len(data_to_process))
+    sc.stop()
+    
+    # Process the result
+    with tqdm(total=len(data_to_process)) as pbar:
+        for i, value in tqdm(enumerate(spark_result)):
+            pbar.update()
+            #qtr = list_qtr[i]
+            # Each quarter gets a few metrics
+            if value[1] == {}:
+                # The parsing failed
+                del cik_scores[value[0]]
+            else:
+                cik_scores[value[0]] = value[1]
+            processing_stats[value[2]] += 1
            
         #qtr_metric_result[value['0']['qtr']] = value
 print("[INFO] {} CIK failed to be processed.".format(sum(processing_stats[1:])))
@@ -349,7 +386,7 @@ print("Detailed stats and error codes:", processing_stats)
 
 # ## Flip the result dictionary to present a per qtr view
 
-# In[19]:
+# In[ ]:
 
 
 # Reorganize the dict to display the data per quarter instead
@@ -368,7 +405,7 @@ assert list(qtr_scores.keys()) == s['list_qtr']
 
 # ## Create a separate dictionary for each metric
 
-# In[20]:
+# In[ ]:
 
 
 # Create the new empty master dictionary
@@ -378,7 +415,7 @@ for m in s['metrics']:
 # master_dict
 
 
-# In[21]:
+# In[ ]:
 
 
 # Populate it
@@ -388,7 +425,7 @@ for m in s['metrics']:
         master_dict[m][qtr] = [(cik, qtr_scores[qtr][cik][m]) for cik in qtr_scores[qtr].keys()]
 
 
-# In[22]:
+# In[ ]:
 
 
 # Display the length for all qtr
@@ -402,7 +439,7 @@ for qtr in s['list_qtr']:
 # 
 # Now at this point the portfolio is not balanced, it is just the list of companies we would like to invest in. We need to weigh each investment by the relative market cap. 
 
-# In[23]:
+# In[ ]:
 
 
 # Populate it
@@ -414,7 +451,7 @@ for m in s['metrics']:
 # master_dict
 
 
-# In[24]:
+# In[ ]:
 
 
 # Reorganize each quarter 
@@ -429,7 +466,7 @@ for m in s['metrics'][:-1]:
         assert len(master_dict[m][qtr].keys()) == 5
 
 
-# In[25]:
+# In[ ]:
 
 
 pf_scores = {m: 0 for m in s['metrics'][:-1]}
@@ -437,7 +474,7 @@ for m in s['metrics']:
     pf_scores[m] = {q: {qtr: 0 for qtr in s['list_qtr'][s['lag']:]} for q in s['bin_labels']}
 
 
-# In[26]:
+# In[ ]:
 
 
 for m in s['metrics'][:-1]:
@@ -447,7 +484,7 @@ for m in s['metrics'][:-1]:
 # pf_scores['diff_jaccard']['Q1']
 
 
-# In[27]:
+# In[ ]:
 
 
 def dump_master_dict(path, master_dict):
@@ -465,14 +502,14 @@ def dump_master_dict(path, master_dict):
                         out.writerow([m, qtr, l, entry[0], entry[1]])
 
 
-# In[28]:
+# In[ ]:
 
 
-path = '/home/alex/Desktop/Insight project/Database/dump_master_dict.csv'
+path = os.path.join(home, 'Desktop/Insight project/Database/dump_master_dict.csv')
 dump_master_dict(path, master_dict)
 
 
-# In[29]:
+# In[ ]:
 
 
 del master_dict
@@ -484,13 +521,13 @@ del master_dict
 
 # ### Remove all the CIK for which we do not have stick data for this time period
 
-# In[30]:
+# In[ ]:
 
 
 pf_scores = post_processing.remove_cik_without_price(pf_scores, lookup, stock_data, s)
 
 
-# In[31]:
+# In[ ]:
 
 
 # Create the new empty master dictionary
@@ -502,7 +539,7 @@ for m in s['metrics'][:-1]:
 
 # ## Initialize the portfolio with an equal amount for all bins
 
-# In[32]:
+# In[ ]:
 
 
 for m in s['metrics'][:-1]:
@@ -513,20 +550,20 @@ for m in s['metrics'][:-1]:
 
 # ## Calculate the value of the portfolio
 
-# In[33]:
+# In[ ]:
 
 
 pf_scores = post_processing.calculate_portfolio_value(pf_scores, pf_values, lookup, stock_data, s)
 
 
-# In[34]:
+# In[ ]:
 
 
 index_name = 'SPX'
 display.diff_vs_benchmark(pf_values, index_name, index_data, s)
 
 
-# In[35]:
+# In[ ]:
 
 
 # Output the data for the pf value
@@ -534,7 +571,7 @@ for qtr in s['list_qtr'][s['lag']:]:
     print(qtr, pf_values['diff_jaccard']['Q5'][qtr][0])
 
 
-# In[36]:
+# In[ ]:
 
 
 # [DEBUG] Show the Apple data for that time period
@@ -542,7 +579,7 @@ extracted_cik_scores = cik_scores[data_to_process[0][0]]
 # extracted_cik_scores
 
 
-# In[37]:
+# In[ ]:
 
 
 #ticker = lookup[320193]
@@ -562,7 +599,7 @@ extracted_stock_data = {k: v for k, v in stock_data[ticker].items() if start_dat
 
 # ### Metrics vs stock price
 
-# In[38]:
+# In[ ]:
 
 
 display.diff_vs_stock(extracted_cik_scores, extracted_stock_data, ticker, s, method='diff')
@@ -570,7 +607,7 @@ display.diff_vs_stock(extracted_cik_scores, extracted_stock_data, ticker, s, met
 
 # ### Sentiment vs stock price
 
-# In[39]:
+# In[ ]:
 
 
 display.diff_vs_stock(extracted_cik_scores, extracted_stock_data, ticker, s, method='sentiment')
