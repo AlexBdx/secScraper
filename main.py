@@ -5,7 +5,7 @@
 
 # ## Packages to import
 
-# In[1]:
+# In[2]:
 
 
 def run_from_ipython():
@@ -14,6 +14,12 @@ def run_from_ipython():
         return True
     except NameError:
         return False
+from platform import python_version
+
+version = "[INFO] Running python {}".format(python_version())
+version += " for ipython" if run_from_ipython() else ""
+print(version)
+
 
 # In[2]:
 
@@ -31,7 +37,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 plt.ioff()
 
-
+import os
 import csv
 from datetime import datetime
 import re
@@ -43,7 +49,6 @@ import pandas as pd
 import argparse
 
 
-
 # ### Set the nb of processes to use based on cmd line arguments/setting
 
 # In[3]:
@@ -51,6 +56,7 @@ import argparse
 
 if run_from_ipython():
     nb_processes_requested = mp.cpu_count()  # From IPython, fixed setting
+    nb_processes_requested = 1 # From IPython, fixed setting
 else:
     ap = argparse.ArgumentParser()
     ap.add_argument("-p", "--processes", type=int, default=1, help="Number of processes launched to process the reports.")
@@ -76,7 +82,7 @@ _s = {
     'path_dump_crsp': os.path.join(home, 'Desktop/Insight project/Database/dump_crsp_merged.txt'),
     'path_output_folder': os.path.join(home, 'Desktop/Insight project/Outputs'),
     'metrics': ['diff_jaccard', 'diff_cosine_tf', 'diff_cosine_tf_idf', 'diff_minEdit', 'diff_simple', 'sing_LoughranMcDonald'],
-    'differentiation_mode': 'intersection',
+    'differentiation_mode': 'monthly',
     'time_range': [(2010, 1), (2012, 4)],
     'bin_count': 5,
     'report_type': ['10-K', '10-Q'],
@@ -102,14 +108,14 @@ else:
     raise ValueError('[ERROR] This type of bin has not been implemented yet.')
 
 # Reports considered to calculate the differences
-if _s['differentiation_mode'] == 'intersection':
+if _s['differentiation_mode'] == 'monthly':
     _s['lag'] = 1
     _s['sections_to_parse_10k'] = ['1a', '3', '7', '7a', '9a']
     _s['sections_to_parse_10q'] = ['_i_2', '_i_3', '_i_4', 'ii_1', 'ii_1a']
 elif _s['differentiation_mode'] == 'yearly':
     _s['lag'] = 4
-    _s['sections_to_parse_10k'] = []
-    _s['sections_to_parse_10q'] = []
+    _s['sections_to_parse_10k'] = ['1a', '3', '7', '7a', '9a']
+    _s['sections_to_parse_10q'] = ['_i_2', '_i_3', '_i_4', 'ii_1', 'ii_1a']
 
 _s['intersection_table'] = {
         '10-K': ['1a', '3', '7', '7a', '9a'],
@@ -303,13 +309,26 @@ data_to_process = debug[:100]  # Debug
 #assert 0
 processing_stats = [0, 0, 0, 0, 0, 0]
 #qtr_metric_result = {key: [] for key in s['list_qtr']}
-    
-with mp.Pool(processes=nb_processes_requested) as p:
-#with mp.Pool(processes=min(mp.cpu_count(), 1)) as p:
-    print("[INFO] Starting a pool of {} workers".format(nb_processes_requested))
+if nb_processes_requested > 1:
+    with mp.Pool(processes=nb_processes_requested) as p:
+    #with mp.Pool(processes=min(mp.cpu_count(), 1)) as p:
+        print("[INFO] Starting a pool of {} workers".format(nb_processes_requested))
 
+        with tqdm(total=len(data_to_process)) as pbar:
+            for i, value in tqdm(enumerate(p.imap_unordered(processing.process_cik, data_to_process))):
+                pbar.update()
+                #qtr = list_qtr[i]
+                # Each quarter gets a few metrics
+                if value[1] == {}:
+                    # The parsing failed
+                    del cik_scores[value[0]]
+                else:
+                    cik_scores[value[0]] = value[1]
+                processing_stats[value[2]] += 1
+else:
+    print("[INFO] Running on {} core (multiprocessing is off)".format(nb_processes_requested))
     with tqdm(total=len(data_to_process)) as pbar:
-        for i, value in tqdm(enumerate(p.imap_unordered(processing.process_cik, data_to_process))):
+        for i, value in tqdm(enumerate(map(processing.process_cik, data_to_process))):
             pbar.update()
             #qtr = list_qtr[i]
             # Each quarter gets a few metrics
@@ -319,10 +338,11 @@ with mp.Pool(processes=nb_processes_requested) as p:
             else:
                 cik_scores[value[0]] = value[1]
             processing_stats[value[2]] += 1
+        
            
         #qtr_metric_result[value['0']['qtr']] = value
 print("[INFO] {} CIK failed to be processed.".format(sum(processing_stats[1:])))
-print("Detailed stats:", processing_stats)
+print("Detailed stats and error codes:", processing_stats)
 
 
 # # Post-processing - Welcome to the gettho
@@ -430,12 +450,6 @@ for m in s['metrics'][:-1]:
 # In[27]:
 
 
-# del master_dict
-
-
-# In[28]:
-
-
 def dump_master_dict(path, master_dict):
     # path = '/home/alex/Desktop/Insight project/Database/dump_master_dict.csv'
     with open(path, 'w') as f:
@@ -451,17 +465,17 @@ def dump_master_dict(path, master_dict):
                         out.writerow([m, qtr, l, entry[0], entry[1]])
 
 
-# In[29]:
+# In[28]:
 
 
 path = '/home/alex/Desktop/Insight project/Database/dump_master_dict.csv'
 dump_master_dict(path, master_dict)
 
 
-# In[30]:
+# In[29]:
 
 
-master_dict['diff_jaccard'][(2010, 2)].keys()
+del master_dict
 
 
 # ## Create a virtual portfolio
@@ -470,13 +484,13 @@ master_dict['diff_jaccard'][(2010, 2)].keys()
 
 # ### Remove all the CIK for which we do not have stick data for this time period
 
-# In[31]:
+# In[30]:
 
 
 pf_scores = post_processing.remove_cik_without_price(pf_scores, lookup, stock_data, s)
 
 
-# In[32]:
+# In[31]:
 
 
 # Create the new empty master dictionary
@@ -488,52 +502,47 @@ for m in s['metrics'][:-1]:
 
 # ## Initialize the portfolio with an equal amount for all bins
 
-# In[33]:
+# In[32]:
 
 
 for m in s['metrics'][:-1]:
     for mod_bin in s['bin_labels']:
-        pf_values[m][mod_bin][s['list_qtr'][1]] = [s['pf_init_value'], tax_rate, s['pf_init_value']]
+        pf_values[m][mod_bin][s['list_qtr'][s['lag']]] = [s['pf_init_value'], tax_rate, s['pf_init_value']]
 #print(pf_values['diff_jaccard'])
 
 
 # ## Calculate the value of the portfolio
 
-# In[34]:
+# In[33]:
 
 
 pf_scores = post_processing.calculate_portfolio_value(pf_scores, pf_values, lookup, stock_data, s)
 
 
-# In[35]:
+# In[34]:
 
 
 index_name = 'SPX'
 display.diff_vs_benchmark(pf_values, index_name, index_data, s)
 
 
-# In[36]:
+# In[35]:
 
 
-for qtr in s['list_qtr'][1:]:
+# Output the data for the pf value
+for qtr in s['list_qtr'][s['lag']:]:
     print(qtr, pf_values['diff_jaccard']['Q5'][qtr][0])
 
 
-# In[37]:
-
-
-test_qtr_data = master_dict['diff_jaccard'][(2010, 2)]
-
-
-# In[38]:
+# In[36]:
 
 
 # [DEBUG] Show the Apple data for that time period
 extracted_cik_scores = cik_scores[data_to_process[0][0]]
-extracted_cik_scores
+# extracted_cik_scores
 
 
-# In[39]:
+# In[37]:
 
 
 #ticker = lookup[320193]
@@ -553,7 +562,7 @@ extracted_stock_data = {k: v for k, v in stock_data[ticker].items() if start_dat
 
 # ### Metrics vs stock price
 
-# In[40]:
+# In[38]:
 
 
 display.diff_vs_stock(extracted_cik_scores, extracted_stock_data, ticker, s, method='diff')
@@ -561,7 +570,7 @@ display.diff_vs_stock(extracted_cik_scores, extracted_stock_data, ticker, s, met
 
 # ### Sentiment vs stock price
 
-# In[41]:
+# In[39]:
 
 
 display.diff_vs_stock(extracted_cik_scores, extracted_stock_data, ticker, s, method='sentiment')
