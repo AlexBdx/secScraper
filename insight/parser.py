@@ -138,12 +138,13 @@ class stage_2_parser():
             if len(res[full_sect[0]]) >= 2:
                 if res[full_sect[-1]][0][1] < res[full_sect[0]][1][0]:
                     # There is a toc!
-                    print("[INFO] Found a ToC!")
+                    # print("[INFO] Found a ToC!")
                     for v in res.values():
                         del v[0]  # Remove all first sections
                     res = {k: v for k, v in res.items() if len(v)}
             else:
-                print("[INFO] No ToC found")
+                # print("[INFO] No ToC found")
+                pass
             
             # Extra step: make sure the first elements go in increasing order.
             try:
@@ -262,7 +263,7 @@ class stage_2_parser():
                 try:
                     assert len(parsed_report[section]) > 0
                 except KeyError:
-                    print("[WARNING] Section {} was found to be empty.".format(section))
+                    # print("[WARNING] Section {} was found to be empty.".format(section))
                     parsed_report[section] = "Nothing found for this section."
                 except AssertionError:
                     raise AssertionError("[ERROR] Why is that section filled with an empty text?")
@@ -384,12 +385,13 @@ class stage_2_parser():
             if len(res[full_sect[0]]) >= 2:
                 if res[full_sect[-1]][0][1] < res[full_sect[0]][1][0]:
                     # There is a toc!
-                    print("[INFO] Found a ToC!")
+                    # print("[INFO] Found a ToC!")
                     for v in res.values(): # Iterate through all the sections
                         del v[0]  # Remove all first titles found - they are the ToC
                     res = {k: v for k, v in res.items() if len(v)}
             else:
-                print("[INFO] No ToC found")
+                # print("[INFO] No ToC found")
+                pass
             
             # Extra step: make sure the first elements go in increasing order.
             try:
@@ -495,7 +497,7 @@ class stage_2_parser():
                 try:
                     assert len(parsed_report[section]) > 0
                 except KeyError:
-                    print("[WARNING] Section {} was found to be empty.".format(section))
+                    # print("[WARNING] Section {} was found to be empty.".format(section))
                     parsed_report[section] = "Nothing found for this section."
                 except AssertionError:
                     raise AssertionError("[ERROR] Why is that section filled with an empty text?")

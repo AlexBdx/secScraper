@@ -15,7 +15,6 @@ def run_from_ipython():
     except NameError:
         return False
 
-
 # In[2]:
 
 
@@ -32,7 +31,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 plt.ioff()
 
-import os
+
 import csv
 from datetime import datetime
 import re
@@ -42,6 +41,7 @@ from collections import OrderedDict
 import time
 import pandas as pd
 import argparse
+
 
 
 # ### Set the nb of processes to use based on cmd line arguments/setting
