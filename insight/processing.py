@@ -22,14 +22,7 @@ def process_cik(data):
     for path_report in file_list:
         split_path = path_report.split('/')
         qtr = (int(split_path[-3]), int(split_path[-2][3]))  # Ex: (2016, 3)
-        """
-        try:
-            assert qtr in s['list_qtr']  # Should always be True
-        except:
-            print(qtr)
-            print(s['list_qtr'])
-            raise
-        """
+
         if qtr in quarterly_submissions.keys():
             published = split_path[-1].split('_')[0]
             published = datetime.strptime(published, '%Y%m%d').date()
@@ -69,24 +62,11 @@ def process_cik(data):
             print("[WARNING] No report were found for {} in the paths".format(key))
         elif len(quarterly_submissions[key]) > 1:
             print("[WARNING] {} reports were released in {}".format(len(quarterly_submissions[key]), key))
-    """
-    # Look for the first quarter for that company - might not have been listed at the start of the time_range
-    for idx in range(sorted(s['list_qtr'])):
-        if s['list_qtr'][idx] in quarterly_submissions.keys():
-            idx_first_qtr = idx
-            break
-    # Look for the last quarter for that company - might have been delisted before the end of the time_range
-    for idx in range(sorted(s['list_qtr']))[::-1]:
-        if s['list_qtr'][idx] in quarterly_submissions.keys():
-            idx_last_qtr = idx
-            break
-    """
     
     # 2. Process the pair differences
     if idx_last_qtr < idx_first_qtr + s['lag']:
         print("idx_first_qtr: {} | idx_last_qtr: {} | lag: {}".format(idx_first_qtr, idx_last_qtr, s['lag']))
-        #print(cik)
-        #print(file_list)
+
         print("[WARNING] Not enough valid reports for CIK {} in this time_range. Skipping.".format(cik))
         quarterly_results = {}  # This CIK will be easy to remove later on
         return (cik, {}, 3)
@@ -114,7 +94,6 @@ def process_cik(data):
               .format(s['list_qtr'][current_idx], s['list_qtr'][previous_idx], s['lag']))
         
         data = [submissions_current_qtr[0], submissions_previous_qtr[0], s]
-        #print(submissions_current_qtr)
         final_result = analyze_reports(data)
         quarterly_results[current_qtr] = final_result
     return (cik, quarterly_results, 0)
@@ -202,16 +181,13 @@ def analyze_reports(data):
     
     # We need to calculate the same things at the same time for comparison purposes. 
     word_count = dict()  # Counts the number of words in each section
-    if s['differentiation_mode'] == 'intersection':  # Reports could be the same or different
+    if s['differentiation_mode'] == 'monthly':  # Reports could be the same or different
         sections_to_consider = s['intersection_table']['10-K']
         result = {section: {} for section in sections_to_consider}  # 10-K notation
-        #print("Created", result)
         
         for idx in range(len(sections_to_consider)):            
             current_section = s['intersection_table'][current['0']['type']][idx]
             previous_section = s['intersection_table'][previous['0']['type']][idx]
-            #print("Working on {}".format(tuple((current_section, previous_section))))
-            #print("Here is current", current)
 
             try:
                 current_text, previous_text = normalize_texts(current[current_section], previous[previous_section])
@@ -244,32 +220,14 @@ def analyze_reports(data):
             # Verify that there is text allocated for each section.
             # If not, add a little something
             if current_section not in current.keys():
-                print("[WARNING] Current section {} not found".format(current_section))
+                #print("[WARNING] Current section {} not found".format(current_section))
                 current[current_section] = "Nothing found for this section."
-                #print(current)
 
             if previous_section not in previous.keys():
-                print("[WARNING] Previous section {} not found".format(current_section))
+                #print("[WARNING] Previous section {} not found".format(current_section))
                 previous[previous_section] = "Nothing found for this section."
             current_text, previous_text = normalize_texts(current[current_section], previous[previous_section])
-            """[TBR]
-            try:
-                current_text, previous_text = normalize_texts(current[current_section], previous[previous_section])
-            except KeyError:  # A section was not found in one of the reports.
-                
-                if 1:
-                #if current_section == 'ii_1a' or previous_section == 'ii_1a':
-                    # That means there were no update on the 10-Q
-                    # Not great but for now let's give it a similarity of 1
-                    print("Typical issue - we will fill the section_result for this 10-K manually")
-                    section_result = {m: 1 for m in s['metrics']}
-                    #for m in s['metrics']:
-                        #section_result[m] = 1
-                    result[s['straight_table'][report_type][idx]] = section_result
-                    continue
-                else:
-                    raise KeyError('[ERROR] Sections {} and {} are not implemented.'.format(current_section, previous_section))
-            """
+
             word_count[sections_to_consider[idx]] = [len(current_text.split()), len(previous_text.split())]
             result[s['straight_table'][report_type][idx]] = calculate_metrics(current_text, previous_text, s)
     else:

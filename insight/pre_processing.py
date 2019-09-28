@@ -103,52 +103,47 @@ def load_stock_data(s, verbose=False):
     # And then their count.
     #path_ticker = os.path.join(s['path_ticker_data'], ticker.lower()+'.us.txt')
     
-    # Count total number of data rows for tqdm
+    # 1. Load the CSV file in RAM
     with open(s['path_stock_database']) as f:
-        nb_lines = sum(1 for line in f) -1  # Brutally fast, > 15 MM rows/second
-
+        data = [line for line in f]  # Brutally fast, ~ 15 MM rows/second
+    
+    # 2. Process the header
     with open(s['path_stock_database']) as f:
-        reader = csv.reader(f)
-        header = next(reader)
+        header = next(f).split(',')
+        header[-1] = header[-1].strip()
         idx_date = header.index("date")
         idx_ticker = header.index("TICKER")
         idx_closing = header.index("ASK")
         idx_outstanding_shares = header.index("SHROUT")
-        data = dict()
-        #selected_span = [(1900, 1), (2100, 1)] if selected_span == None else selected_span
-        for row in tqdm(reader, total=nb_lines):  # Could change
-            # 1. Check for emtpy rows (??)
+    
+    # 3. Process the data
+    data2 = dict()
+    flag_first_time = True
+    for line in tqdm(data[1:]):
+        row = line.split(',')
+        date = row[idx_date]
+        qtr = tuple((int(date[:4]), int(date[4:6])//3 + 1))
+        
+        if s['time_range'][0] <= qtr <= s['time_range'][1]:  # Only data in time range
+            row[-1] = row[-1].strip()
             ticker = row[idx_ticker]
             closing_price = row[idx_closing]
             outstanding_shares = row[idx_outstanding_shares]
             if ticker == '' or closing_price == '' or outstanding_shares == '':
                 continue
-            
             # 2. Process the row
             closing_price = float(closing_price)
             market_cap = 1000*closing_price*int(outstanding_shares)
-            date = row[idx_date]
-            qtr = tuple((int(date[:4]), int(date[4:6])//3 + 1))
             
-            #print(tuple([int(date[0]), qtr]))
-            if s['time_range'][0] <= qtr <= s['time_range'][1]:  # Only data in time range
-                if ticker not in data.keys():
-                    data[ticker] = dict()
+            if ticker not in data2.keys():
+                data2[ticker] = dict()
+            else:
                 ts = datetime.strptime(date, '%Y%m%d').date()
-                #ts = tuple(row[0].split('-'))
-                if s['type_daily_price'] == 'opening':
-                    raise ValueError('[ERROR] Not supported. Get more data.')
-                elif s['type_daily_price'] == 'high':
-                    raise ValueError('[ERROR] Not supported. Get more data.')
-                elif s['type_daily_price'] == 'low':
-                    raise ValueError('[ERROR] Not supported. Get more data.')
-                elif s['type_daily_price'] == 'closing':
-                    data[ticker][ts] = [closing_price, market_cap]
-                elif s['type_daily_price'] == 'average':
-                    raise ValueError('[ERROR] Not supported. Get more data.')
-                else:
-                    raise ValueError('[ERROR] Unknown type of price for this stock')
-    return data
+                data2[ticker][ts] = (closing_price, market_cap)
+        else:
+            continue
+    
+    return data2
 
 # 4. Load the main indexes tables
 def load_index_data(s):

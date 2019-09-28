@@ -7,3 +7,5 @@ numpy>=1.16
 sklearn
 termcolor
 pandas
+boto3
+pyspark

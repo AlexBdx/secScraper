@@ -12,7 +12,8 @@ def make_quintiles(x, s):
     #print(input_data)  # [DEBUG] Make values unique for bin split
     #input_data = tuple(v - ((v-0.5)/abs(v-0.5))*0.01*np.random.rand() for v in input_data)
     #print(input_data)
-    mapping = pd.qcut(input_data, s['bin_count'], labels=False)
+    input_data = pd.Series(input_data)
+    mapping = pd.qcut(input_data.rank(method='first'), s['bin_count'], labels=False)
     #print(mapping)
     for idx_input, idx_output in enumerate(mapping):
         #idx_qcut = labels.index(associated_label)  # Find label's index
