@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath('../'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'secScrapper'
+project = 'secScraper'
 copyright = '2019, Alexandre Bondoux'
 author = 'Alexandre Bondoux'
 
@@ -107,7 +107,7 @@ html_static_path = []
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'secScrapperdoc'
+htmlhelp_basename = 'secScraperdoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -134,7 +134,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'secScrapper.tex', 'sec\\_scrapper Documentation',
+    (master_doc, 'secScraper.tex', 'sec\\_scrapper Documentation',
      'Alexandre Bondoux', 'manual'),
 ]
 
@@ -144,7 +144,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'secScrapper', 'secScrapper Documentation',
+    (master_doc, 'secScraper', 'secScraper Documentation',
      [author], 1)
 ]
 
@@ -155,8 +155,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'secScrapper', 'secScrapper Documentation',
-     author, 'secScrapper', 'One line description of project.',
+    (master_doc, 'secScraper', 'secScraper Documentation',
+     author, 'secScraper', 'One line description of project.',
      'Miscellaneous'),
 ]
 
