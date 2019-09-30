@@ -3,8 +3,16 @@ import glob
 
 path_glob = join(dirname(abspath(__file__)), '*.py')
 modules = glob.glob(path_glob)
-module_blacklist = ['__init__.py', 'setup.py', 'Filing metrics.py', 'main.py', 'sec_scrapper.py', 'Load_MasterDictionary.py']
+module_blacklist = [
+    '__init__.py',
+    'setup.py',
+    'Filing metrics.py',
+    'main.py',
+    'ec2_scrapping.py',
+    'Load_MasterDictionary.py'
+]
 
 __name__ = "sec_scrapper"
-__version__ = "0.0.9"
+__version__ = "0.0.10"
 __all__ = [ basename(f)[:-3] for f in modules if isfile(f) and split(f)[1] not in module_blacklist]
+# print(__all__)

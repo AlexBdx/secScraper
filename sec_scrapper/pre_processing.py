@@ -1,9 +1,8 @@
 import csv
 from tqdm import tqdm
 from datetime import datetime
-import time
 import glob
-
+import multiprocessing as mp
 
 class ReadOnlyDict(dict):
     """
@@ -52,17 +51,19 @@ def unique_cik(path_list):
     :return: list of unique CIK found
     """
     all_cik = [int(e.split('/')[-1].split('_')[4]) for e in path_list]
-    return list(set(all_cik))
+    return set(all_cik)
 
 
-def paths_to_cik_dict(file_list):
+def paths_to_cik_dict(file_list, unique_sec_cik):
     """
-    Organizes a list of file paths into a dictionary, the keys being the CIKs.
+    Organizes a list of file paths into a dictionary, the keys being the CIKs. unique_sec_cik is used to initialize
+    the cik_dict.
 
     :param file_list: unorganized list of paths
+    :param unique_sec_cik: set of all unique CIK found
     :return: a dictionary containing all the paths, organized by CIKs
     """
-    cik_dict = dict()
+    cik_dict = {k: [] for k in unique_sec_cik}
     for path in tqdm(file_list):
         split_path = path.split('/')
         cik = int(split_path[-1].split('_')[4])  # Cast to an int
@@ -82,9 +83,9 @@ def load_cik_path(s):
     file_list = filter_cik_path(file_list, s)
     print("[INFO] Shrunk to {:,} {}".format(len(file_list), s['report_type']))
     # print("[INFO] Example:", file_list[0])
-    # unique_sec_cik = unique_cik(file_list)  # Get unique CIKs
-    # print("[INFO] Found {:,} unique CIK in master index".format(len(unique_sec_cik)))
-    cik_path = paths_to_cik_dict(file_list)  # Create a dict based on that
+    unique_sec_cik = unique_cik(file_list)  # Get unique CIKs
+    print("[INFO] Found {:,} unique CIK in master index".format(len(unique_sec_cik)))
+    cik_path = paths_to_cik_dict(file_list, unique_sec_cik)  # Create a dict based on that
     print("[INFO] cik_path contains data on {:,} CIK numbers".format(len(cik_path)))
     return cik_path
 
@@ -146,17 +147,12 @@ def intersection_sec_lookup(cik_path, lookup):
 def load_stock_data(s):
     """
     Load all the stock data and pre-processes it.
-    WARNING: Despite all (single procees) efforts, this still takes a while. Loading is crazy fast, but processing each
-    row takes too long in the absence of bulk operations.
+    WARNING: Despite all (single process) efforts, this still takes a while. Using map seems to be the fastest
+    way in python for that O(N) operation but it still takes ~ 45s on my local machine (half the original time!)
 
     :param s: Settings dictionary
-    :return:
+    :return: dict stock_data[ticker][time stamp] = (closing, market cap)
     """
-    # 1. Load the CSV file in RAM
-    with open(s['path_stock_database']) as f:
-        data = [line for line in f]  # Brutally fast, ~ 15 MM rows/second
-    
-    # 2. Process the header
     with open(s['path_stock_database']) as f:
         header = next(f).split(',')
         header[-1] = header[-1].strip()
@@ -164,34 +160,43 @@ def load_stock_data(s):
         idx_ticker = header.index("TICKER")
         idx_closing = header.index("ASK")
         idx_outstanding_shares = header.index("SHROUT")
-    
-    # 3. Process the data - that takes a while
-    data2 = dict()
-    for line in tqdm(data[1:]):
-        row = line.split(',')
-        date = row[idx_date]
-        qtr = tuple((int(date[:4]), int(date[4:6])//3 + 1))
-        
-        if s['time_range'][0] <= qtr <= s['time_range'][1]:  # Only data in time range
-            row[-1] = row[-1].strip()
-            ticker = row[idx_ticker]
-            closing_price = row[idx_closing]
-            outstanding_shares = row[idx_outstanding_shares]
-            if ticker == '' or closing_price == '' or outstanding_shares == '':
-                continue
-            # 2. Process the row
-            closing_price = float(closing_price)
-            market_cap = 1000*closing_price*int(outstanding_shares)
-            
-            if ticker not in data2.keys():
-                data2[ticker] = dict()
+
+        start = s['time_range'][0]
+        finish = s['time_range'][-1]
+        print(start, finish)
+
+        def process_line(line):
+            row = line.split(',')
+            date = row[idx_date]
+            qtr = tuple((int(date[:4]), int(date[4:6]) // 3 + 1))
+
+            if start <= qtr <= finish:  # Only data in time range
+                row[-1] = row[-1].strip()
+                ticker = row[idx_ticker]
+                closing_price = row[idx_closing]
+                outstanding_shares = row[idx_outstanding_shares]
+                if ticker == '' or closing_price == '' or outstanding_shares == '':
+                    return '0', 0, 0, 0
+                # 2. Process the row
+                closing_price = float(closing_price)
+                market_cap = 1000 * closing_price * int(outstanding_shares)
+                return ticker, datetime.strptime(date, '%Y%m%d').date(), closing_price, market_cap
             else:
-                ts = datetime.strptime(date, '%Y%m%d').date()
-                data2[ticker][ts] = (closing_price, market_cap)
-        else:
-            continue
-    
-    return data2
+                return '0', 0, 0, 0
+
+        print("[INFO] Starting the mapping")
+        result = map(process_line, f)
+        stock_data = dict()
+        # previous_ticker = '0'
+        for e in tqdm(result, total=30563446):
+            if e[0] != '0':
+                # if e[0] != previous_ticker:  # Not faster and less flexible
+                if e[0] not in stock_data.keys():
+                    stock_data[e[0]] = dict()
+                    # previous_ticker = e[0]
+                stock_data[e[0]][e[1]] = (e[2], e[3])
+
+        return stock_data
 
 
 def load_index_data(s):

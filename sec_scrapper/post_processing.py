@@ -63,7 +63,7 @@ def get_share_price(cik, qtr, lookup, stock_data, verbose=False):
     return share_price, market_cap, flag_price_found
 
 
-def remove_cik_without_price(pf_scores, lookup, stock_data, s):
+def remove_cik_without_price(pf_scores, lookup, stock_data, s, verbose=False):
     """
     So far, we have not checked if we had a stock price available for that all CIK.
     This function removes the CIK for which we have no price. < 10% of them are dropped.
@@ -72,7 +72,8 @@ def remove_cik_without_price(pf_scores, lookup, stock_data, s):
     :param lookup: lookup dict
     :param stock_data: dict of the stock data
     :param s: Settings dictionary
-    :return:
+    :param verbose:
+    :return: outputs more stuff
     """
     for m in s['metrics'][:-1]:
         for mod_bin in s['bin_labels']:
@@ -84,7 +85,8 @@ def remove_cik_without_price(pf_scores, lookup, stock_data, s):
                     if not flag_price_found:
                         cik_not_found.append(cik)
                 pf_scores[m][mod_bin][qtr] = [e for e in pf_scores[m][mod_bin][qtr] if e[0] not in cik_not_found]
-                print("[INFO] Removed {}/{} CIK".format(len(cik_not_found), len(pf_scores[m][mod_bin][qtr])))
+                if verbose:
+                    print("[INFO] Removed {}/{} CIK".format(len(cik_not_found), len(pf_scores[m][mod_bin][qtr])))
                 if len(pf_scores[m][mod_bin][qtr]) == 0:
                     raise ValueError("[ERROR] Nothing is left!")
                 elif len(pf_scores[m][mod_bin][qtr]) <= 20:
