@@ -4,8 +4,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="sec_scrapper",
-    version="0.0.12",
+    name="secScrapper",
+    version="0.0.14",
     author="Alex Bondoux",
     author_email="alexandre.bdx@gmail.com",
     description="Library for Insight project",

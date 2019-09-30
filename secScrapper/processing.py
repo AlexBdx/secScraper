@@ -1,6 +1,6 @@
 from datetime import datetime
-from sec_scrapper import metrics
-from sec_scrapper import parser
+from secScrapper import metrics
+from secScrapper import parser
 
 
 def process_cik(data):
