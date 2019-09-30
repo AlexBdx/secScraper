@@ -8,11 +8,11 @@ module_blacklist = [
     'setup.py',
     'Filing metrics.py',
     'main.py',
-    'ec2_scrapping.py',
+    'ec2_scraping.py',
     'Load_MasterDictionary.py'
 ]
 
 __name__ = "secScraper"
-__version__ = "0.0.23"
+__version__ = "0.0.24"
 __all__ = [ basename(f)[:-3] for f in modules if isfile(f) and split(f)[1] not in module_blacklist]
 # print(__all__)
