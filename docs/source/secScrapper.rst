@@ -1,60 +1,60 @@
-sec_scrapper package
+secScrapper package
 ====================
 
-Here is the documentation of all the modules in the sec_scrapper package.
+Here is the documentation of all the modules in the secScrapper package.
 
-sec_scrapper.display module
+secScrapper.display module
 ---------------------------
 
-.. automodule:: sec_scrapper.display
+.. automodule:: secScrapper.display
     :members:
     :undoc-members:
     :show-inheritance:
 
-sec_scrapper.metrics module
+secScrapper.metrics module
 ---------------------------
 
-.. automodule:: sec_scrapper.metrics
+.. automodule:: secScrapper.metrics
     :members:
     :undoc-members:
     :show-inheritance:
 
-sec_scrapper.parser module
+secScrapper.parser module
 --------------------------
 
-.. automodule:: sec_scrapper.parser
+.. automodule:: secScrapper.parser
     :members:
     :undoc-members:
     :show-inheritance:
 
-sec_scrapper.post_processing module
+secScrapper.post_processing module
 -----------------------------------
 
-.. automodule:: sec_scrapper.post_processing
+.. automodule:: secScrapper.post_processing
     :members:
     :undoc-members:
     :show-inheritance:
 
-sec_scrapper.pre_processing module
+secScrapper.pre_processing module
 ----------------------------------
 
-.. automodule:: sec_scrapper.pre_processing
+.. automodule:: secScrapper.pre_processing
     :members:
     :undoc-members:
     :show-inheritance:
 
-sec_scrapper.processing module
+secScrapper.processing module
 ------------------------------
 
-.. automodule:: sec_scrapper.processing
+.. automodule:: secScrapper.processing
     :members:
     :undoc-members:
     :show-inheritance:
 
-sec_scrapper.qtrs module
+secScrapper.qtrs module
 ------------------------
 
-.. automodule:: sec_scrapper.qtrs
+.. automodule:: secScrapper.qtrs
     :members:
     :undoc-members:
     :show-inheritance:

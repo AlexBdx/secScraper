@@ -1,6 +1,6 @@
 import pandas as pd
 from datetime import datetime
-from sec_scrapper import qtrs
+from secScrapper import qtrs
 import csv
 from tqdm import tqdm
 
