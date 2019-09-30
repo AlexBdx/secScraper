@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 """Routine to load MasterDictionary class"""
 # BDM : 201510
 
