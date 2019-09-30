@@ -47,12 +47,10 @@ from collections import OrderedDict
 import time
 import pandas as pd
 import argparse
-import Load_MasterDictionary as LM
-
 
 # Spark
-import findspark
-findspark.init('/home/alex/spark-2.4.4-bin-hadoop2.7')
+#import findspark
+#findspark.init('/home/alex/spark-2.4.4-bin-hadoop2.7')
 import pyspark
 
 
@@ -161,15 +159,15 @@ s.set_read_state(read_only=True)  # Set as read only
 
 # ### Load the sentiment analysis dictionary
 
-# In[7]:
+# In[8]:
 
 
-lm_dictionary = LM.load_masterdictionary(s['path_master_dictionary'], True)
+lm_dictionary = Load_MasterDictionary.load_masterdictionary(s['path_master_dictionary'], True)
 
 
 # ### Find all the unique CIK from the SEC filings
 
-# In[8]:
+# In[ ]:
 
 
 cik_path = pre_processing.load_cik_path(s)
@@ -177,14 +175,14 @@ cik_path = pre_processing.load_cik_path(s)
 
 # ### Get the largest {CIK: ticker} possible given our lookup table
 
-# In[9]:
+# In[ ]:
 
 
 lookup = pre_processing.load_lookup(s)
 print("[INFO] Loaded {:,} CIK/Tickers correspondances.".format(len(lookup)))
 
 
-# In[10]:
+# In[ ]:
 
 
 cik_path, lookup = pre_processing.intersection_sec_lookup(cik_path, lookup)
@@ -195,14 +193,14 @@ print("cik_path: {:,} CIK | lookup: {:,} CIK"
 
 # ### Load stock data and drop all CIKs for which we don't have data
 
-# In[11]:
+# In[ ]:
 
 
 # Load all stock prices
 stock_data = pre_processing.load_stock_data(s)
 
 
-# In[12]:
+# In[ ]:
 
 
 lookup, stock_data = pre_processing.intersection_lookup_stock(lookup, stock_data)
@@ -213,7 +211,7 @@ print("lookup: {:,} tickers | stock_data: {:,} tickers"
 
 # ### Load stock indexes - will serve as benchmark later on
 
-# In[13]:
+# In[ ]:
 
 
 index_data = pre_processing.load_index_data(s)
@@ -224,7 +222,7 @@ print("[INFO] Loaded the following index data:", list(index_data.keys()))
 
 # Technically, we have just done it for lookup. So we only need to re-run an intersection for lookup and sec.
 
-# In[14]:
+# In[ ]:
 
 
 cik_path, lookup = pre_processing.intersection_sec_lookup(cik_path, lookup)
@@ -239,7 +237,7 @@ print("cik_path: {:,} CIK | lookup: {:,} CIK"
 # 
 # However, multiple CIK can redirect to the same ticker if the company changed its ticker over time. That should be a very limited amount of cases though.
 
-# In[15]:
+# In[ ]:
 
 
 assert cik_path.keys() == lookup.keys()
@@ -253,7 +251,7 @@ assert len(set(lookup.values())) == len(set(stock_data.keys()))
 # In this section, the goal is to build a list of CIK that will successfully be parsed for the time_range considered.
 # It should be trivial for a vast majority of the CIK, but ideally there should be only one document per quarter for each CIK from the moment they are listed to the moment they are delisted.
 
-# In[16]:
+# In[ ]:
 
 
 # Create the list of quarters to consider
@@ -262,7 +260,7 @@ print("[INFO] Removed all the CIK that did not have one report per quarter.")
 print("cik_dict: {:,} CIK".format(len(cik_path)))
 
 
-# In[17]:
+# In[ ]:
 
 
 print("[INFO] We are left with {:,} CIKs that meet our requirements:".format(len(cik_path)))
@@ -271,7 +269,7 @@ print("- The stock data is available for that ticker")
 print("- There is one and only one report per quarter")
 
 
-# In[18]:
+# In[ ]:
 
 
 """
@@ -311,7 +309,7 @@ cik_path.keys()
 # 
 # We use multiprocessing to go through N CIK at once but a single core is dedicated to going through a given CIK for the specified time_range. Such a core can be running for a while if the company has been in business for the whole time_range and publish a lot of text data in its 10-K.
 
-# In[19]:
+# In[ ]:
 
 
 try:
@@ -321,7 +319,7 @@ except:
 nb_processes_requested = 0
 
 
-# In[20]:
+# In[ ]:
 
 
 # Processing the reports will be done in parrallel in a random order
@@ -400,7 +398,7 @@ print("Detailed stats and error codes:", processing_stats)
 
 # ## Flip the result dictionary to present a per qtr view
 
-# In[21]:
+# In[ ]:
 
 
 # Reorganize the dict to display the data per quarter instead
@@ -419,7 +417,7 @@ assert list(qtr_scores.keys()) == s['list_qtr']
 
 # ## Create a separate dictionary for each metric
 
-# In[22]:
+# In[ ]:
 
 
 # Create the new empty master dictionary
@@ -429,7 +427,7 @@ for m in s['metrics']:
 # master_dict
 
 
-# In[23]:
+# In[ ]:
 
 
 # Populate it
@@ -439,7 +437,7 @@ for m in s['metrics']:
         master_dict[m][qtr] = [(cik, qtr_scores[qtr][cik][m]) for cik in qtr_scores[qtr].keys()]
 
 
-# In[24]:
+# In[ ]:
 
 
 # Display the length for all qtr
@@ -453,7 +451,7 @@ for qtr in s['list_qtr']:
 # 
 # Now at this point the portfolio is not balanced, it is just the list of companies we would like to invest in. We need to weigh each investment by the relative market cap. 
 
-# In[25]:
+# In[ ]:
 
 
 # Populate it
@@ -465,7 +463,7 @@ for m in s['metrics']:
 # master_dict
 
 
-# In[26]:
+# In[ ]:
 
 
 # Reorganize each quarter 
@@ -480,7 +478,7 @@ for m in s['metrics'][:-1]:
         assert len(master_dict[m][qtr].keys()) == 5
 
 
-# In[27]:
+# In[ ]:
 
 
 pf_scores = {m: 0 for m in s['metrics'][:-1]}
@@ -488,7 +486,7 @@ for m in s['metrics']:
     pf_scores[m] = {q: {qtr: 0 for qtr in s['list_qtr'][s['lag']:]} for q in s['bin_labels']}
 
 
-# In[28]:
+# In[ ]:
 
 
 for m in s['metrics'][:-1]:
@@ -498,13 +496,13 @@ for m in s['metrics'][:-1]:
 # pf_scores['diff_jaccard']['Q1']
 
 
-# In[29]:
+# In[ ]:
 
 
 post_processing.dump_master_dict(master_dict, s)
 
 
-# In[30]:
+# In[ ]:
 
 
 del master_dict
@@ -516,13 +514,13 @@ del master_dict
 
 # ### Remove all the CIK for which we do not have stock data for this time period
 
-# In[31]:
+# In[ ]:
 
 
 pf_scores = post_processing.remove_cik_without_price(pf_scores, lookup, stock_data, s)
 
 
-# In[32]:
+# In[ ]:
 
 
 # Create the new empty master dictionary
@@ -534,7 +532,7 @@ for m in s['metrics'][:-1]:
 
 # ## Initialize the portfolio with an equal amount for all bins
 
-# In[33]:
+# In[ ]:
 
 
 for m in s['metrics'][:-1]:
@@ -545,26 +543,26 @@ for m in s['metrics'][:-1]:
 
 # ## Calculate the value of the portfolio
 
-# In[34]:
+# In[ ]:
 
 
 pf_scores = post_processing.calculate_portfolio_value(pf_scores, pf_values, lookup, stock_data, s)
 
 
-# In[35]:
+# In[ ]:
 
 
 post_processing.dump_pf_values(pf_values, s)
 
 
-# In[36]:
+# In[ ]:
 
 
 index_name = 'SPX'
 display.diff_vs_benchmark(pf_values, index_name, index_data, s)
 
 
-# In[37]:
+# In[ ]:
 
 
 # Output the data for the pf value
@@ -572,7 +570,7 @@ for qtr in s['list_qtr'][s['lag']:]:
     print(qtr, pf_values['diff_jaccard']['Q5'][qtr][0])
 
 
-# In[38]:
+# In[ ]:
 
 
 # [DEBUG] Show the Apple data for that time period
@@ -583,13 +581,13 @@ extracted_cik_scores = cik_scores[cik]
 # extracted_cik_scores
 
 
-# In[39]:
+# In[ ]:
 
 
 post_processing.dump_cik_scores(cik_scores, s)
 
 
-# In[40]:
+# In[ ]:
 
 
 #ticker = lookup[320193]
@@ -609,7 +607,7 @@ extracted_stock_data = {k: v for k, v in stock_data[ticker].items() if start_dat
 
 # ### Metrics vs stock price
 
-# In[41]:
+# In[ ]:
 
 
 display.diff_vs_stock(extracted_cik_scores, extracted_stock_data, ticker, s, method='diff')
@@ -617,7 +615,7 @@ display.diff_vs_stock(extracted_cik_scores, extracted_stock_data, ticker, s, met
 
 # ### Sentiment vs stock price
 
-# In[42]:
+# In[ ]:
 
 
 display.diff_vs_stock(extracted_cik_scores, extracted_stock_data, ticker, s, method='sentiment')
