@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="secScrapper",
-    version="0.0.15",
+    version="0.0.16",
     author="Alex Bondoux",
     author_email="alexandre.bdx@gmail.com",
     description="Library for Insight project",
