@@ -1,6 +1,8 @@
 import pandas as pd
 from datetime import datetime
 from sec_scrapper import qtrs
+import csv
+from tqdm import tqdm
 
 
 def make_quintiles(x, s):
@@ -177,3 +179,49 @@ def calculate_portfolio_value(pf_scores, pf_values, lookup, stock_data, s):
                 for idx in range(nb_cik):
                     pf_scores[m][mod_bin][qtr][idx][3] /= total_mc
     return pf_scores
+
+
+def dump_master_dict(master_dict, s):
+    # path = '/home/alex/Desktop/Insight project/Database/dump_master_dict.csv'
+    with open(s['path_dump_master_dict'], 'w') as f:
+        out = csv.writer(f, delimiter=';')
+        header = ['METRIC', 'QUARTER', 'QUINTILE', 'CIK', 'SCORE']
+        out.writerow(header)
+        
+        # Main writing loop
+        for m in tqdm(s['metrics'][:-1]):
+            for qtr in s['list_qtr'][s['lag']:]:
+                for l in s['bin_labels']:
+                    for entry in master_dict[m][qtr][l]:
+                        out.writerow([m, qtr, l, entry[0], entry[1]])
+
+
+def dump_pf_values(pf_values, s):
+    # path = '/home/alex/Desktop/Insight project/Database/dump_master_dict.csv'
+    with open(s['path_dump_pf_values'], 'w') as f:
+        out = csv.writer(f, delimiter=';')
+        header = ['METRIC',  'QUINTILE', 'QUARTER', 'PF_VALUE', 'TAX_RATE', 'PF_VALUE_POST_TAX']
+        out.writerow(header)
+        
+        # Main writing loop
+        for m in tqdm(s['metrics'][:-1]):
+            for l in s['bin_labels']:
+                for qtr in s['list_qtr'][s['lag']:]:
+                    out.writerow([m, qtr, l, *pf_values[m][l][qtr]])
+
+
+def dump_cik_scores(cik_scores, s):
+    # path = '/home/alex/Desktop/Insight project/Database/dump_master_dict.csv'
+    with open(s['path_dump_cik_scores'], 'w') as f:
+        out = csv.writer(f, delimiter=';')
+        header = ['CIK',  'QTR', 'METRIC', 'SCORE']
+        out.writerow(header)
+        
+        # Main writing loop
+        for cik in tqdm(cik_scores.keys()):
+            for qtr in s['list_qtr'][s['lag']:]:
+                for m in s['metrics']:
+                    try:
+                        out.writerow([cik, qtr, m, cik_scores[cik][qtr][m]])
+                    except KeyError:  # There is no data for this qtr, CIK not listed/delisted
+                        continue

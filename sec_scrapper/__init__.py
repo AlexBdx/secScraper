@@ -13,6 +13,6 @@ module_blacklist = [
 ]
 
 __name__ = "sec_scrapper"
-__version__ = "0.0.10"
+__version__ = "0.0.11"
 __all__ = [ basename(f)[:-3] for f in modules if isfile(f) and split(f)[1] not in module_blacklist]
 # print(__all__)
