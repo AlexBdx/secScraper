@@ -265,7 +265,7 @@ def analyze_reports(current, previous, s, lm_dictionary):
 
 def normalize_texts(current_text, previous_text):
     """
-    Remove all extra spaces, \n and \t that could be left and substitute by a single whitespace.
+    Remove all extra white spaces, \r, \n and \t that could be left and substitute by a single whitespace.
 
     :param current_text: First string
     :param previous_text: Second string
@@ -273,3 +273,4 @@ def normalize_texts(current_text, previous_text):
     """
 
     return " ".join(current_text.split()), " ".join(previous_text.split())
+

@@ -91,8 +91,8 @@ def remove_cik_without_price(pf_scores, lookup, stock_data, s, verbose=False):
                     print("[INFO] Removed {}/{} CIK".format(len(cik_not_found), len(pf_scores[m][mod_bin][qtr])))
                 if len(pf_scores[m][mod_bin][qtr]) == 0:
                     raise ValueError("[ERROR] Nothing is left!")
-                elif len(pf_scores[m][mod_bin][qtr]) <= 20:
-                    print(m, mod_bin, qtr)
+                # elif len(pf_scores[m][mod_bin][qtr]) <= 20:
+                    # print(m, mod_bin, qtr)
     return pf_scores
 
 

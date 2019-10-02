@@ -18,24 +18,6 @@ def diff_jaccard(str1, str2):
     return float(len(c)) / (len(a) + len(b) - len(c))
 
 
-def test_diff_jaccard():
-    """
-    Test for the diff_jaccard function.
-
-    :return: bool
-    """
-    Da = "We expect demand to increase."
-    Db = "We expect worldwide demand to increase."
-    Dc = "We expect weakness in sales."
-    test1 = diff_jaccard(Da, Db)
-    test2 = diff_jaccard(Da, Dc)
-    assert round(test1, 2) == 0.83
-    assert round(test2, 2) == 0.25
-    return True
-
-# test_diff_jaccard()
-
-
 def diff_cosine_tf(str1, str2):
     """
     Calculates the Cosine TF similarity between two strings.
@@ -64,24 +46,6 @@ def diff_cosine_tf_idf(str1, str2):
     return float(tfidf_similarity[0, 1])
 
 
-def test_diff_cosine_tf():
-    """
-    Test for the Cosine TF function.
-
-    :return: bool
-    """
-    Da = "We expect demand to increase."
-    Db = "We expect worldwide demand to increase."
-    Dc = "We expect weakness in sales."
-    test1 = diff_cosine_tf(Da, Db)
-    test2 = diff_cosine_tf(Da, Dc)
-    assert round(test1, 2) == 0.91
-    assert round(test2, 2) == 0.40
-    return True
-
-# test_diff_cosine_tf()
-
-
 def diff_minEdit(str1, str2):
     """
     Calculates the minEdit similarity between two strings. This is word based.
@@ -103,24 +67,6 @@ def diff_minEdit(str1, str2):
     return similarity
 
 
-def test_diff_minEdit():
-    """
-    Test for the diff_minEdit function.
-
-    :return: bool
-    """
-    Da = "We expect demand to increase."
-    Db = "We expect worldwide demand to increase."
-    Dc = "We expect weakness in sales."
-    test1 = diff_minEdit(Da, Db)
-    test2 = diff_minEdit(Da, Dc)
-    assert round(test1, 2) == 0.90
-    assert round(test2, 2) == 0.30
-    return True
-
-# test_diff_minEdit()
-
-
 def diff_simple(str1, str2):
     """
     Calculates the simple difference similarity between two strings. This is character based.
@@ -135,24 +81,6 @@ def diff_simple(str1, str2):
     comparison = [change for change in comparison if change[0] != ' ']
     similarity = 1-len(comparison)/(len(str1) + len(str2))
     return similarity
-
-
-def test_diff_simple():
-    """
-    Test for the diff_simple function.
-
-    :return: bool
-    """
-    Da = "We expect demand to increase."
-    Db = "We expect worldwide demand to increase."
-    Dc = "We expect weakness in sales."
-    test1 = diff_simple(Da, Db)
-    test2 = diff_simple(Da, Dc)
-    assert round(test1, 2) == 0.85
-    assert round(test2, 2) == 0.67
-    return True
-
-# test_diff_simple()
 
 
 def composite_index(data):
