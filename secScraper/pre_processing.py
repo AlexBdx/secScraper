@@ -148,7 +148,7 @@ def load_stock_data(s):
     """
     Load all the stock data and pre-processes it.
     WARNING: Despite all (single process) efforts, this still takes a while. Using map seems to be the fastest
-    way in python for that O(N) operation but it still takes ~ 45s on my local machine (half the original time!)
+    way in python for that O(N) operation but it still takes ~ 60 s on my local machine (1/3rd reduction)
 
     :param s: Settings dictionary
     :return: dict stock_data[ticker][time stamp] = (closing, market cap)
@@ -163,7 +163,7 @@ def load_stock_data(s):
 
         start = s['time_range'][0]
         finish = s['time_range'][-1]
-        print(start, finish)
+        print("[INFO] Loading data from {} to {}".format(start, finish))
 
         def process_line(line):
             row = line.split(',')
@@ -389,113 +389,6 @@ def is_permanently_delisted(quarterly_submissions, qtr, s):
             flag_permanently_delisted = False
             break
     return flag_permanently_delisted
-
-
-def test_check_report_continuity():
-    s = {'list_qtr': [
-        (2010, 1),
-        (2010, 2),
-        (2010, 3),
-        (2010, 4),
-        (2011, 1),
-        (2011, 2),
-        (2011, 3),
-        (2011, 4),
-        (2012, 1),
-        (2012, 2),
-        (2012, 3),
-        (2012, 4)
-    ]}
-    qs1 = {
-        (2010, 1): [{'type': '10-K', 'published': (2010, 2, 26), 'qtr': (2010, 1)}], 
-        (2010, 2): [{'type': '10-Q', 'published': (2010, 5, 3), 'qtr': (2010, 2)}], 
-        (2010, 3): [{'type': '10-Q', 'published': (2010, 8, 6), 'qtr': (2010, 3)}], 
-        (2010, 4): [{'type': '10-Q', 'published': (2010, 11, 5), 'qtr': (2010, 4)}], 
-        (2011, 1): [{'type': '10-K', 'published': (2011, 3, 1), 'qtr': (2011, 1)}], 
-        (2011, 2): [{'type': '10-Q', 'published': (2011, 5, 6), 'qtr': (2011, 2)}], 
-        (2011, 3): [{'type': '10-Q', 'published': (2011, 8, 5), 'qtr': (2011, 3)}], 
-        (2011, 4): [{'type': '10-Q', 'published': (2011, 11, 4), 'qtr': (2011, 4)}], 
-        (2012, 1): [{'type': '10-K', 'published': (2012, 2, 29), 'qtr': (2012, 1)}], 
-        (2012, 2): [{'type': '10-Q', 'published': (2012, 5, 4), 'qtr': (2012, 2)}], 
-        (2012, 3): [{'type': '10-Q', 'published': (2012, 8, 3), 'qtr': (2012, 3)}], 
-        (2012, 4): [{'type': '10-Q', 'published': (2012, 11, 2), 'qtr': (2012, 4)}]
-    }
-    qs2 = {
-        (2010, 1): [],
-        (2010, 2): [{'type': '10-Q', 'published': (2010, 5, 3), 'qtr': (2010, 2)}],
-        (2010, 3): [{'type': '10-Q', 'published': (2010, 8, 6), 'qtr': (2010, 3)}], 
-        (2010, 4): [{'type': '10-Q', 'published': (2010, 11, 5), 'qtr': (2010, 4)}], 
-        (2011, 1): [{'type': '10-K', 'published': (2011, 3, 1), 'qtr': (2011, 1)}], 
-        (2011, 2): [{'type': '10-Q', 'published': (2011, 5, 6), 'qtr': (2011, 2)}], 
-        (2011, 3): [{'type': '10-Q', 'published': (2011, 8, 5), 'qtr': (2011, 3)}], 
-        (2011, 4): [{'type': '10-Q', 'published': (2011, 11, 4), 'qtr': (2011, 4)}], 
-        (2012, 1): [{'type': '10-K', 'published': (2012, 2, 29), 'qtr': (2012, 1)}], 
-        (2012, 2): [{'type': '10-Q', 'published': (2012, 5, 4), 'qtr': (2012, 2)}], 
-        (2012, 3): [{'type': '10-Q', 'published': (2012, 8, 3), 'qtr': (2012, 3)}], 
-        (2012, 4): [{'type': '10-Q', 'published': (2012, 11, 2), 'qtr': (2012, 4)}]
-    }
-    qs3 = {
-        (2010, 1): [{'type': '10-K', 'published': (2010, 2, 26), 'qtr': (2010, 1)}], 
-        (2010, 2): [{'type': '10-Q', 'published': (2010, 5, 3), 'qtr': (2010, 2)}], 
-        (2010, 3): [{'type': '10-Q', 'published': (2010, 8, 6), 'qtr': (2010, 3)}], 
-        (2010, 4): [{'type': '10-Q', 'published': (2010, 11, 5), 'qtr': (2010, 4)}], 
-        (2011, 1): [{'type': '10-K', 'published': (2011, 3, 1), 'qtr': (2011, 1)}], 
-        (2011, 2): [{'type': '10-Q', 'published': (2011, 5, 6), 'qtr': (2011, 2)}], 
-        (2011, 3): [{'type': '10-Q', 'published': (2011, 8, 5), 'qtr': (2011, 3)}], 
-        (2011, 4): [{'type': '10-Q', 'published': (2011, 11, 4), 'qtr': (2011, 4)}], 
-        (2012, 1): [{'type': '10-K', 'published': (2012, 2, 29), 'qtr': (2012, 1)}], 
-        (2012, 2): [{'type': '10-Q', 'published': (2012, 5, 4), 'qtr': (2012, 2)}], 
-        (2012, 3): [{'type': '10-Q', 'published': (2012, 8, 3), 'qtr': (2012, 3)}],
-        (2012, 4): []
-    }
-    qs4 = {
-        (2010, 1): [{'type': '10-K', 'published': (2010, 2, 26), 'qtr': (2010, 1)}], 
-        (2010, 2): [{'type': '10-Q', 'published': (2010, 5, 3), 'qtr': (2010, 2)}], 
-        (2010, 3): [{'type': '10-Q', 'published': (2010, 8, 6), 'qtr': (2010, 3)}], 
-        (2010, 4): [{'type': '10-Q', 'published': (2010, 11, 5), 'qtr': (2010, 4)}], 
-        (2011, 1): [{'type': '10-K', 'published': (2011, 3, 1), 'qtr': (2011, 1)}], 
-        (2011, 2): [{'type': '10-Q', 'published': (2011, 5, 6), 'qtr': (2011, 2)}], 
-        (2011, 3): [], 
-        (2011, 4): [{'type': '10-Q', 'published': (2011, 11, 4), 'qtr': (2011, 4)}], 
-        (2012, 1): [{'type': '10-K', 'published': (2012, 2, 29), 'qtr': (2012, 1)}], 
-        (2012, 2): [{'type': '10-Q', 'published': (2012, 5, 4), 'qtr': (2012, 2)}], 
-        (2012, 3): [{'type': '10-Q', 'published': (2012, 8, 3), 'qtr': (2012, 3)}],
-        (2012, 4): [{'type': '10-Q', 'published': (2012, 11, 2), 'qtr': (2012, 4)}]
-    }
-    qs5 = {
-        (2010, 1): [{'type': '10-K', 'published': (2010, 2, 26), 'qtr': (2010, 1)}], 
-        (2010, 2): [{'type': '10-Q', 'published': (2010, 5, 3), 'qtr': (2010, 2)}], 
-        (2010, 3): [{'type': '10-Q', 'published': (2010, 8, 6), 'qtr': (2010, 3)}], 
-        (2010, 4): [{'type': '10-Q', 'published': (2010, 11, 5), 'qtr': (2010, 4)}], 
-        (2011, 1): [{'type': '10-K', 'published': (2011, 3, 1), 'qtr': (2011, 1)}], 
-        (2011, 2): [{'type': '10-Q', 'published': (2011, 5, 6), 'qtr': (2011, 2)},
-                    {'type': '10-Q', 'published': (2011, 5, 6), 'qtr': (2011, 2)}],
-        (2011, 3): [{'type': '10-Q', 'published': (2011, 8, 5), 'qtr': (2011, 3)}], 
-        (2011, 4): [{'type': '10-Q', 'published': (2011, 11, 4), 'qtr': (2011, 4)}], 
-        (2012, 1): [{'type': '10-K', 'published': (2012, 2, 29), 'qtr': (2012, 1)}], 
-        (2012, 2): [{'type': '10-Q', 'published': (2012, 5, 4), 'qtr': (2012, 2)}], 
-        (2012, 3): [{'type': '10-Q', 'published': (2012, 8, 3), 'qtr': (2012, 3)}], 
-        (2012, 4): [{'type': '10-Q', 'published': (2012, 11, 2), 'qtr': (2012, 4)}]
-    }
-    qs6 = {
-        (2010, 1): [], 
-        (2010, 2): [], 
-        (2010, 3): [], 
-        (2010, 4): [], 
-        (2011, 1): [], 
-        (2011, 2): [], 
-        (2011, 3): [], 
-        (2011, 4): [], 
-        (2012, 1): [], 
-        (2012, 2): [], 
-        (2012, 3): [], 
-        (2012, 4): []
-    }
-    list_qs = [(True, qs1), (True, qs2), (True, qs3), (False, qs4), (False, qs5), (False, qs6)]
-    for qs in list_qs:
-        assert check_report_continuity(qs[1], s) == qs[0]
-    return True
-# test_check_report_continuity()
 
 
 def dump_tickers_crsp(path_dump_file, tickers):

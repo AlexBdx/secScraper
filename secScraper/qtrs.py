@@ -41,15 +41,6 @@ def create_qtr_list(time_range):
     return list_qtr
 
 
-def test_create_qtr_list():
-    test_1 = create_qtr_list([(2018, 1), (2018, 4)])
-    assert test_1 == [(2018, 1), (2018, 2), (2018, 3), (2018, 4)]
-    test_2 = create_qtr_list([(2016, 2), (2017, 3)])
-    assert test_2 == [(2016, 2), (2016, 3), (2016, 4), (2017, 1), (2017, 2), (2017, 3)]
-    return True
-# test_create_qtr_list()
-
-
 def yearly_qtr_list(time_range):
     """
     Give all the qtr of each year included in a given time_range. Both start and end qtr are included.
@@ -69,15 +60,6 @@ def yearly_qtr_list(time_range):
             else:
                 year_list.append(create_qtr_list([(year, 1), (year, 4)]))
     return year_list
-
-
-def test_yearly_qtr_list():
-    test_1 = yearly_qtr_list([(2016, 2), (2016, 2)])
-    assert test_1 == [(2016, 2)]
-    test_2 = yearly_qtr_list([(2015, 2), (2016, 3)])
-    assert test_2 == [[(2015, 2), (2015, 3), (2015, 4)], [(2016, 1), (2016, 2), (2016, 3)]]
-    return True
-# test_yearly_qtr_list()
 
 
 def qtr_to_master_url(qtr):
@@ -132,20 +114,6 @@ def is_downloaded(filepath):
         if not os.path.isdir(os.path.split(filepath)[0]):
             os.makedirs(os.path.split(filepath)[0])
         return False
-
-
-def test_is_downloaded():
-    home = os.path.expanduser('~')
-    test_1 = is_downloaded(os.path.join(home, "ahsbxaksjhbxhjx.txt"))
-    assert not test_1  # That file is unlikely to exist
-    path_temp_file = os.path.join(home, "temp_test_is_downloaded.temp")
-    with open(path_temp_file, 'w'):
-        pass
-    test_2 = is_downloaded(path_temp_file)
-    os.remove(path_temp_file)
-    assert test_2
-    return True
-# test_is_downloaded()
 
 
 def unzip_file(path):
@@ -253,17 +221,6 @@ def previous_qtr(qtr, s):
         return s['list_qtr'][idx-1]
 
 
-def test_previous_qtr():
-    s = dict()
-    s['list_qtr'] = [(2010, k) for k in range(1, 5)] + [(2011, k) for k in range(1, 5)]
-    test1 = previous_qtr((2011, 1), s)
-    assert test1 == (2010, 4)
-    test2 = previous_qtr((2011, 4), s)
-    assert test2 == (2011, 3)
-    return True
-# test_previous_qtr()
-
-
 def qtr_to_day(qtr, position, date_format='string'):
     """
     Dumb function that returns the first or last day in a quarter. Two options for the output type: string or datetime.
@@ -287,12 +244,3 @@ def qtr_to_day(qtr, position, date_format='string'):
         result = datetime.strptime(result, '%Y%m%d').date()
     return result
 
-
-def test_qtr_to_day():
-    test1 = qtr_to_day((2008, 1), 'first', date_format='string')
-    assert test1 == '20080101'
-    test2 = qtr_to_day((2005, 4), 'last', date_format='string')
-    assert test2 == '20051231'
-    return True
-
-# test_qtr_to_day()
