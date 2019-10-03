@@ -35,7 +35,7 @@ class TestMetrics(unittest.TestCase):
         da = "We expect demand to increase."
         db = "We expect worldwide demand to increase."
         test = metrics.diff_cosine_tf(da, db)
-        self.assertEqual(round(test, 2), 0.00)
+        self.assertEqual(round(test, 2), 0.91)
 
     def test_diff_cosine_tf_low(self):
         """
