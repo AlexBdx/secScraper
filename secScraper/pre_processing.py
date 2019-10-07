@@ -111,7 +111,7 @@ def load_lookup(s):
     :return: Lookup table in the form of a dictionary.
     """
     # Load the lookup table
-    with open(s['path_cik_ticker_lookup']) as f:
+    with open(s['path_lookup']) as f:
         cik_to_ticker = dict()
         reader = csv.reader(f, delimiter='|')
         next(reader)  # Skip header
@@ -144,7 +144,7 @@ def intersection_sec_lookup(cik_path, lookup):
     return inter_cik, inter_lookup
 
 
-def load_stock_data(s):
+def load_stock_data(s, penny_limit=0, verbose=True):
     """
     Load all the stock data and pre-processes it.
     WARNING: Despite all (single process) efforts, this still takes a while. Using map seems to be the fastest
@@ -176,26 +176,50 @@ def load_stock_data(s):
                 closing_price = row[idx_closing]
                 outstanding_shares = row[idx_outstanding_shares]
                 if ticker == '' or closing_price == '' or outstanding_shares == '':
-                    return '0', 0, 0, 0
+                    return '0', 1, 0, 0
                 # 2. Process the row
                 closing_price = float(closing_price)
                 market_cap = 1000 * closing_price * int(outstanding_shares)
+                if market_cap < penny_limit:
+                    return '0', ticker, 0, 0
                 return ticker, datetime.strptime(date, '%Y%m%d').date(), closing_price, market_cap
             else:
-                return '0', 0, 0, 0
+                return '0', 3, 0, 0
 
         print("[INFO] Starting the mapping")
         result = map(process_line, f)
         stock_data = dict()
         # previous_ticker = '0'
+        counter_incomplete_line = 0
+        counter_line_out_of_range = 0
+        penny_stocks = []
+        nb_lines = 0
         for e in tqdm(result, total=30563446):
+            nb_lines += 1
             if e[0] != '0':
                 # if e[0] != previous_ticker:  # Not faster and less flexible
                 if e[0] not in stock_data.keys():
                     stock_data[e[0]] = dict()
                     # previous_ticker = e[0]
                 stock_data[e[0]][e[1]] = (e[2], e[3])
+            else:
+                if e[1] == 1:  # Incomplete line
+                    counter_incomplete_line += 1
+                elif type(e[1]) == str:
+                    penny_stocks.append(e[1])
+                elif e[1] == 3:
+                    counter_line_out_of_range += 1
 
+        # Remove all the penny stocks
+        penny_stocks = set(penny_stocks)
+        stock_data = {k: v for k, v in stock_data.items() if k not in penny_stocks}
+
+        if verbose:
+            print("[INFO] stock_data load statistics:")
+            print("Incomplete lines: {:,}/{:,}".format(counter_incomplete_line, nb_lines))
+            print("Penny stocks found (at least one entry below threshold): {}/{}"
+            .format(len(penny_stocks), len(penny_stocks) + len(stock_data.keys())))
+            print("Lines out of range: {:,}/{:,}".format(counter_line_out_of_range, nb_lines))
         return stock_data
 
 
@@ -208,20 +232,21 @@ def load_index_data(s):
     """
     # 1. Find all the indexes in the folder
     file_list = glob.glob(s['path_stock_indexes']+'**/*.csv', recursive=True)
+    file_list = [f for f in file_list if f.split('/')[-1] != 'filtered_index_data.csv']
     index_names = [f.split('/')[-1][14:-4] for f in file_list]
     paths = zip(file_list, index_names)
     
     # 2. Open all these files and add the data to a dictionary
-    index_data = {k: [] for k in index_names}
+    index_data = {k: {} for k in index_names}
     for path in paths:
         with open(path[0]) as f:
             reader = csv.reader(f)
-            header = next(reader)  # Skip the header
+            header = next(reader)
             idx_date = header.index("Date")
             idx_closing = header.index("Close")
             for row in reader:
                 date = datetime.strptime(row[idx_date], '%Y-%m-%d').date()
-                index_data[path[1]].append([date, float(row[1])])  # Load all
+                index_data[path[1]][date] = float(row[1])  # Load all
     return index_data
 
 

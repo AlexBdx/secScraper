@@ -1,5 +1,5 @@
 import unittest
-from secScraper import metrics
+from secScraper import metrics, processing
 
 
 class TestMetrics(unittest.TestCase):
@@ -12,6 +12,8 @@ class TestMetrics(unittest.TestCase):
         """
         da = "We expect demand to increase."
         db = "We expect worldwide demand to increase."
+        da = processing.normalize_text(da)
+        db = processing.normalize_text(db)
         test = metrics.diff_jaccard(da, db)
         self.assertEqual(round(test, 2), 0.83)
 
@@ -23,6 +25,8 @@ class TestMetrics(unittest.TestCase):
         """
         da = "We expect demand to increase."
         dc = "We expect weakness in sales."
+        da = processing.normalize_text(da)
+        dc = processing.normalize_text(dc)
         test = metrics.diff_jaccard(da, dc)
         self.assertEqual(round(test, 2), 0.25)
 

@@ -121,8 +121,9 @@ class stage_2_parser():
             # Extra step: make sure the first elements go in increasing order.
             try:
                 res = clean_first_markers(res)
-            except:
-                print("This is the res", res)
+            except Exception as e:
+                print('[ERROR] {} in parser.clean_first_markers (10-Q)'.format(e))
+                print("This is the res\n", res)
                 raise
             
             if verbose:
@@ -286,10 +287,12 @@ class stage_2_parser():
                 pass
             
             # Extra step: make sure the first elements go in increasing order.
+            
             try:
                 res = clean_first_markers(res)
-            except:
-                print("This is the res", res)
+            except Exception as e:
+                print('[ERROR] {} in parser.clean_first_markers (10-K)'.format(e))
+                print("This is the res\n", res)
                 raise
             
             if verbose:
@@ -372,7 +375,7 @@ def clean_first_markers(res):
     :param res: dict, keys are sections to parse and contain the locations where the titles were found in the text.
     :return: Filtered version of res without the ToC locations
     """
-    # The goal is to layer the first maker in ascending order and remove early references to them.
+    # The goal is to layer the first marker in ascending order and remove early references to them.
     sections = list(res.keys())
     # start = sections[0][1]
     for idx in range(len(sections)-1):
