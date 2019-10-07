@@ -42,7 +42,7 @@ def insert_row(connector, name_table, row):
 
 def settings_to_postgres(connector, s):
     delete_table(connector, 'settings')
-    create_postgres_table(connector, 'settings', ['KEY', 'VALUE'])
+    create_postgres_table(connector, 'settings', [('KEY', 'text'), ('VALUE', 'text')])
     idx = 0
     for k, v in tqdm(s.items()):
         row = [idx, k, str(v)]
@@ -86,31 +86,14 @@ def cik_scores_to_postgres(connector, cik_scores, header, s):
                 except KeyError:  # There is no data for this qtr, CIK not listed/delisted
                     continue
 
-def stock_data_csv_to_postgres(connector, path, header):
-    delete_table(connector, 'stock_data')
-    create_postgres_table(connector, 'stock_data', header)
+def csv_to_postgres(connector, table_name, header, path):
+    delete_table(connector, table_name)
+    create_postgres_table(connector, table_name, header)
     with open(path, 'r') as f:
         cur = connector.cursor()
         next(f) # Skip the header row.
-        cur.copy_from(f, 'stock_data', sep=';')
+        cur.copy_from(f, table_name, sep=';')
         connector.commit()
-
-
-def stock_data_to_postgres(connector, stock_data, header):
-    delete_table(connector, 'stock_data')
-    create_postgres_table(connector, 'stock_data', header)
-    idx = 0
-
-
-
-def index_data_to_postgres(connector, index_data, header):
-    delete_table(connector, 'index_data')
-    create_postgres_table(connector, 'index_data', header)
-    idx = 0
-    for index in tqdm(index_data.keys()):
-        for date, value in index_data[index]:
-            insert_row(connector, 'index_data', (idx, date, value))
-            idx += 1
 
 
 # Build the plot based on a PostGres query
@@ -162,7 +145,7 @@ def retrieve_lookup(connector):
 
 
 def retrieve_cik_scores(connector, cik, s):
-    sql_query = "SELECT * FROM {} WHERE cik = '{}';".format('cik_scores', cik)
+    sql_query = "SELECT * FROM cik_scores WHERE cik = '{}';".format(cik)
     print(sql_query)
     
     cur = connector.cursor()
@@ -181,8 +164,8 @@ def retrieve_cik_scores(connector, cik, s):
     return result
 
 
-def retrieve_stock_data(connector):
-    sql_query = "SELECT * FROM stock_data;"
+def retrieve_all_stock_data(connector, table_name):
+    sql_query = "SELECT * FROM {};".format(table_name)
     print(sql_query)
     
     cur = connector.cursor()
@@ -193,13 +176,34 @@ def retrieve_stock_data(connector):
     stock_data = dict()
     for e in tqdm(data):
         try:
-            stock_data[e[1]][datetime.strptime(e[2], '%Y-%m-%d').date()] = [float(e[3]), float(e[4])]
+            stock_data[e[1]][e[2]] = [*e[3:]]
         except KeyError:  # That ticker does not exist yet
             stock_data[e[1]] = dict()
-            stock_data[e[1]][datetime.strptime(e[2], '%Y-%m-%d').date()] = [float(e[3]), float(e[4])]
+            stock_data[e[1]][e[2]] = [*e[3:]]
         
     return stock_data
 
+def retrieve_stock_data(connector, ticker):
+    sql_query = "SELECT * FROM stock_data WHERE ticker = '{}';".format(ticker)
+    print(sql_query)
+    
+    cur = connector.cursor()
+    cur.execute(sql_query)
+    data = cur.fetchall()
+    #print(data)
+    # Initialize
+    result = {cik: {qtr: {} for qtr in s['list_qtr']}}
+    for e in data:
+        result[cik][ast.literal_eval(e[2])][e[3]] = e[4]
+        result[cik][ast.literal_eval(e[2])]['0'] = {
+            'type': e[5],
+            'published': e[6],
+            'qtr': ast.literal_eval(e[2])
+        }
+    return result
+    
+    
+    
 def does_ticker_exist(connector, ticker):
     """
     Check if a given ticker exists in the stock database.

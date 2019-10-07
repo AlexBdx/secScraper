@@ -3,24 +3,28 @@ from datetime import datetime
 from secScraper import qtrs
 import csv
 from tqdm import tqdm
+from scipy.stats.mstats import winsorize
 
 
-def make_quintiles(x, s):
+def make_quintiles(x, s, winsorize=0.01):
     """
-    Create quintiles based on a list of values. Used to create quintiles based on the scores of each report.
+    Winsorize input data (default is 1% on each end). Create quintiles based on a list of values.
+    Used to create quintiles based on the scores of each report.
 
     :param x: list of lists. Only interested in a single column though.
     :param s: Settings dictionary
     :return: quintiles as a list of list
     """
-    # x is (cik, value)
+    # x is (cik, score, nb_share_unbalanced, nb_share_balanced)
     # Create labels and bins of the same size
     # labels = ['Q1', 'Q2', 'Q3', 'Q4', 'Q5']  # Not using that anymore
     quintiles = {l: [] for l in s['bin_labels']}
-    _, input_data, _, _ = zip(*x)
+    
+    # _, input_data, _, _ = zip(*x)
+    input_data = x
     input_data = pd.Series(input_data)
     mapping = pd.qcut(input_data.rank(method='first'), s['bin_count'], labels=False)
-    # print(mapping)
+    print(mapping)
     for idx_input, idx_output in enumerate(mapping):
         quintiles[s['bin_labels'][idx_output]].append(x[idx_input])
     return quintiles
@@ -38,12 +42,17 @@ def get_share_price(cik, qtr, lookup, stock_data, verbose=False):
     :return: share_price, market_cap, flag_price_found
     """
     ticker = lookup[cik]
+    # print("cik/ticker", cik, ticker)
     qtr_start_date = "{}{}{}".format(str(qtr[0]), str((qtr[1]-1)*3+1).zfill(2), '01')
     qtr_start_date = datetime.strptime(qtr_start_date, '%Y%m%d').date()
     
     # Find the first trading day after the beginning of the quarter.
     # Sanity check: is there a price available?
-    time_range = list(stock_data[ticker].keys())
+    try:
+        time_range = list(stock_data[ticker].keys())
+    except:
+        return 1, 1, False
+    
     if verbose:
         print("Prices cover {} to {} and we are looking for {}".format(time_range[0], time_range[-1], qtr_start_date))
     
@@ -121,7 +130,7 @@ def get_pf_value(pf_scores, m, mod_bin, qtr, lookup, stock_data, s):
     return unbalanced_value, balanced_value
 
 
-def calculate_portfolio_value(pf_scores, pf_values, lookup, stock_data, s):
+def calculate_portfolio_value(pf_scores, pf_values, lookup, stock_data, s, balancing='balanced', verbose=False):
     """
     Calculate the value of a portfolio, in equal weight and balanced weight (by market cap) mode. The value is written
     to pf_scores (in the inputs).
@@ -139,7 +148,8 @@ def calculate_portfolio_value(pf_scores, pf_values, lookup, stock_data, s):
                 # Here we have an array of arrays [cik, score, nb_shares_unbalanced, nb_shares_balanced]
                 # 1. Unbalanced portfolio: everyone get the same amount of shares
                 # 1.1 Get number of CIK
-                nb_cik = len(pf_scores[m][mod_bin][qtr])
+                #print(pf_scores)
+                nb_cik = len(pf_scores[m][mod_bin][qtr])  # Nb of CIK in that bin
                 total_mc = 0
                 
                 # Update pf value!
@@ -147,7 +157,13 @@ def calculate_portfolio_value(pf_scores, pf_values, lookup, stock_data, s):
                     pf_value = s['pf_init_value']
                 else:
                     pf_value_unbalanced, pf_value_balanced = get_pf_value(pf_scores, m, mod_bin, qtr, lookup, stock_data, s)
-                    pf_value = pf_value_balanced
+                    if balancing == 'balanced':
+                        pf_value = pf_value_balanced
+                    elif balancing == 'unbalanced':
+                        pf_value = pf_value_unbalanced
+                    else:
+                        raise ValueError('[ERROR] Balancing method unknown.')
+                    
                     # print(pf_value_unbalanced, pf_value_balanced)
                     pf_values[m][mod_bin][qtr][0] = pf_value
                     pf_value *= (1 - pf_values[m][mod_bin][qtr][1])  # Apply a tax rate
@@ -161,7 +177,8 @@ def calculate_portfolio_value(pf_scores, pf_values, lookup, stock_data, s):
                     price, market_cap, flag_price_found = get_share_price(cik, qtr, lookup, stock_data)
                     nb_errors += 0 if flag_price_found else 1
                 if nb_errors:
-                    print("Found", nb_errors, "errors out of", nb_cik)
+                    if verbose:
+                        print("Found", nb_errors, "errors out of", nb_cik)
                 nb_cik -= nb_errors
                 if nb_cik < 0:
                     raise ValueError("WTF - No CIK left after checking for the stock data availability?")

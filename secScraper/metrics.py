@@ -1,7 +1,23 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import linear_kernel
 import difflib
 import re
 import string
+import math
+from tqdm import tqdm
+import nltk
+
+
+# tokenize = lambda string_of_text: string_of_text.lower().split(" ")
+
+def cosine_similarity(vector1, vector2):
+    dot_product = sum(p*q for p,q in zip(vector1, vector2))
+    magnitude = math.sqrt(sum([val**2 for val in vector1])) * math.sqrt(sum([val**2 for val in vector2]))
+    if not magnitude:
+        return 0
+    return dot_product/magnitude
+
+
 
 
 def diff_jaccard(str1, str2):
@@ -12,11 +28,30 @@ def diff_jaccard(str1, str2):
     :param str2: Second string.
     :return: float in the [0, 1] interval
     """
-    a = set(str1.split()) 
-    b = set(str2.split())
+    assert type(str1) == list and type(str2) == list
+    assert type(str1[0]) == str and type(str2[0]) == str
+    a = set(str1) 
+    b = set(str2)
     c = a.intersection(b)
     return float(len(c)) / (len(a) + len(b) - len(c))
 
+
+def diff_sk_cosine_tf(str1, str2, stop_words):
+    # Direct via sklearn
+    # sklearn_tf = TfidfVectorizer(norm='l2',min_df=0, use_idf=True, smooth_idf=True, sublinear_tf=True, tokenizer=tokenize)
+    sklearn_tf = TfidfVectorizer(norm='l2', stop_words=stop_words, use_idf=False)
+    sklearn_representation = sklearn_tf.fit_transform([str1, str2])
+    x, y = sklearn_representation.toarray()
+    cosine_similarity = linear_kernel(x.reshape(1, -1), y.reshape(1, -1))  # Only works with norm='l2'
+    return cosine_similarity[0][0]
+
+def diff_sk_cosine_tf_idf(str1, str2, stop_words):
+    # sklearn_tfidf = TfidfVectorizer(norm='l2',min_df=0, use_idf=True, smooth_idf=False, sublinear_tf=True, tokenizer=tokenize)
+    sklearn_tfidf = TfidfVectorizer(norm='l2', stop_words=stop_words, use_idf=True)
+    sklearn_representation = sklearn_tfidf.fit_transform([str1, str2])
+    x, y = sklearn_representation.toarray()
+    cosine_similarity = linear_kernel(x.reshape(1, -1), y.reshape(1, -1))  # Only works with norm='l2'
+    return cosine_similarity[0][0]
 
 def diff_cosine_tf(str1, str2):
     """
@@ -30,7 +65,6 @@ def diff_cosine_tf(str1, str2):
     tf = vect.fit_transform([str1, str2])
     tf_similarity = tf * tf.T
     return float(tf_similarity[0, 1])
-
 
 def diff_cosine_tf_idf(str1, str2):
     """
@@ -67,6 +101,48 @@ def diff_minEdit(str1, str2):
     return similarity
 
 
+def diff_gfg_editDistDP(str1, str2):
+    # WARNING: O(m x n) complexity in RAM & time (if enough RAM...)
+    # str1 = tokenize(str1)
+    # str2 = tokenize(str2)
+    assert type(str1) == list and type(str2) == list
+    assert type(str1[0]) == str and type(str2[0]) == str
+    
+    m = len(str1)
+    n = len(str2)
+    # Create a table to store results of subproblems 
+    dp = [[0 for x in range(n+1)] for x in range(m+1)]
+  
+    # Fill d[][] in bottom up manner 
+    for i in range(m+1): 
+        for j in range(n+1): 
+  
+            # If first string is empty, only option is to 
+            # insert all characters of second string 
+            if i == 0: 
+                dp[i][j] = j    # Min. operations = j 
+  
+            # If second string is empty, only option is to 
+            # remove all characters of second string 
+            elif j == 0: 
+                dp[i][j] = i    # Min. operations = i 
+  
+            # If last characters are same, ignore last char 
+            # and recur for remaining string 
+            elif str1[i-1] == str2[j-1]: 
+                dp[i][j] = dp[i-1][j-1] 
+  
+            # If last character are different, consider all 
+            # possibilities and find minimum 
+            else: 
+                dp[i][j] = 1 + min(dp[i][j-1],        # Insert 
+                                   dp[i-1][j],        # Remove 
+                                   dp[i-1][j-1])    # Replace 
+  
+    # return dp[m][n]
+    return 1 - dp[m][n]/(m+n)
+
+
 def diff_simple(str1, str2):
     """
     Calculates the simple difference similarity between two strings. This is character based.
@@ -81,6 +157,11 @@ def diff_simple(str1, str2):
     comparison = [change for change in comparison if change[0] != ' ']
     similarity = 1-len(comparison)/(len(str1) + len(str2))
     return similarity
+
+def diff_edit_distance(str1, str2):
+    # str1 = tokenize(str1)
+    # str2 = tokenize(str2)
+    return nltk.edit_distance(str1, str2)/(len(str1)+len(str2))
 
 
 def composite_index(data):

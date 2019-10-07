@@ -9,3 +9,4 @@ termcolor
 pandas
 boto3
 pyspark
+psycopg2
