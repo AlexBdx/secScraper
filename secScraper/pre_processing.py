@@ -342,7 +342,7 @@ def check_report_type(quarterly_submissions, qtr):
         raise ValueError('[ERROR] Only 10-K and 10-Q supported.')
 
 
-def check_report_continuity(quarterly_submissions, s):
+def check_report_continuity(quarterly_submissions, s, verbose=False):
     """
     Verify that the sequence of reports for the various qtr is 0-...0-1-...-1-0-...-0. In other words, once you are
     listed you only have one and only one report per quarter until you are delisted.
@@ -352,9 +352,11 @@ def check_report_continuity(quarterly_submissions, s):
     :return:
     """
     flag_success, qtr = find_first_listed_qtr(quarterly_submissions, s)
-    # print("First quarter is", qtr)
+    if verbose:
+        print("First quarter is", qtr)
     if not flag_success:
-        # print('Returned False. Could not find the first quarter, they seem all empty.')
+        if verbose:
+            print('Returned False. Could not find the first quarter, they seem all empty.')
         return False
         # raise ValueError('Could not find the first quarter, they seem all empty.')
     
@@ -369,12 +371,15 @@ def check_report_continuity(quarterly_submissions, s):
                 return False
         elif len(quarterly_submissions[qtr]) == 0:  # Has it been delisted?
             flag_is_delisted = is_permanently_delisted(quarterly_submissions, qtr, s)
-            # print("Returned {} because flag_is_delisted is {}".format(flag_is_delisted, flag_is_delisted))
+            if verbose:
+                print("Returned {} because flag_is_delisted is {}".format(flag_is_delisted, flag_is_delisted))
             return True if flag_is_delisted else False
         else:  # More than one report -> failed
-            # print("Returned False because there is more than one report")
+            if verbose:
+                print("Returned False because there is more than one report for {}".format(qtr))
             return False
-    # print("Returned True and everything is good")
+    if verbose:
+        print("Returned True and everything is good")
     return True
 
 
