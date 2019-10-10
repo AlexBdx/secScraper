@@ -3,33 +3,28 @@
 
 # # Configuration
 
-# ## Packages to import
-
 # In[1]:
 
 
-def run_from_ipython():
-    try:
-        __IPYTHON__
-        return True
-    except NameError:
-        return False
-from platform import python_version
+from secScraper import *
+import sys
 
-version = "[INFO] Running python {}".format(python_version())
-version += " for ipython" if run_from_ipython() else ""
-print(version)
+if sys.version_info[0] < 3 or sys.version_info[1] < 6:
+    raise Exception("Must be using Python >= 3.6 due to reliance on ordered default dict.")
+else:
+    version = "[INFO] Running python {}.{}.{}".format(*sys.version_info[:3])
+    if display.run_from_ipython():
+        get_ipython().run_line_magic('load_ext', 'autoreload')
+        get_ipython().run_line_magic('autoreload', '2')
+        get_ipython().run_line_magic('matplotlib', 'notebook')
+        version += " for ipython" if display.run_from_ipython() else ""
+    print("[INFO] Running python {}.{}.{} (>= python 3.6)".format(*sys.version_info[:3]))
 
+
+# ## Packages to import
 
 # In[2]:
 
-
-if run_from_ipython():
-    get_ipython().run_line_magic('load_ext', 'autoreload')
-    get_ipython().run_line_magic('autoreload', '2')
-    get_ipython().run_line_magic('matplotlib', 'notebook')
-
-from secScraper import *
 
 import glob
 import numpy as np
@@ -47,10 +42,13 @@ from collections import OrderedDict
 import time
 import pandas as pd
 import argparse
+import psycopg2
+import ast
+import copy
 
 # Spark
-#import findspark
-#findspark.init('/home/alex/spark-2.4.4-bin-hadoop2.7')
+# import findspark
+# findspark.init('/home/alex/spark-2.4.4-bin-hadoop2.7')
 import pyspark
 
 
@@ -59,7 +57,7 @@ import pyspark
 # In[3]:
 
 
-if run_from_ipython():
+if display.run_from_ipython():
     nb_processes_requested = mp.cpu_count()  # From IPython, fixed setting
     nb_processes_requested = 1 # From IPython, fixed setting
 else:
@@ -81,18 +79,26 @@ home = os.path.expanduser("~")
 _s = {
     'path_stage_1_data': os.path.join(home, 'Desktop/filtered_text_data/nd_data/'),
     'path_stock_database': os.path.join(home, 'Desktop/Insight project/Database/Ticker_stock_price.csv'),
+    'path_filtered_stock_data': os.path.join(home, 'Desktop/Insight project/Database/filtered_stock_data.csv'),
     'path_stock_indexes': os.path.join(home, 'Desktop/Insight project/Database/Indexes/'),
-    'path_cik_ticker_lookup': os.path.join(home, 'Desktop/Insight project/Database/cik_ticker.csv'),
+    'path_filtered_index_data': os.path.join(home, 'Desktop/Insight project/Database/Indexes/filtered_index_data.csv'),
+    'path_lookup': os.path.join(home, 'Desktop/Insight project/Database/lookup.csv'),
+    'path_filtered_lookup': os.path.join(home, 'Desktop/Insight project/Database/filtered_lookup.csv'),
     'path_master_dictionary': os.path.join(home, 'Desktop/Insight project/Database/LoughranMcDonald_MasterDictionary_2018.csv'),
     'path_dump_crsp': os.path.join(home, 'Desktop/Insight project/Database/dump_crsp_merged.txt'),
     'path_output_folder': os.path.join(home, 'Desktop/Insight project/Outputs'),
     'path_dump_cik_scores': os.path.join(home, 'Desktop/Insight project/Outputs/dump_cik_scores.csv'),
     'path_dump_pf_values': os.path.join(home, 'Desktop/Insight project/Outputs/dump_pf_values.csv'),
     'path_dump_master_dict': os.path.join(home, 'Desktop/Insight project/Outputs/dump_master_dict.csv'),
-    'metrics': ['diff_jaccard', 'diff_cosine_tf', 'diff_cosine_tf_idf', 'diff_minEdit', 'diff_simple', 'sing_LoughranMcDonald'],
-    'differentiation_mode': 'monthly',
-    'time_range': [(2010, 1), (2012, 4)],
+    'metrics': ['diff_jaccard', 'diff_sk_cosine_tf_idf', 'diff_gfg_editDistDP'],
+    'stop_words': False,
+    'lemmatize': False,
+    'differentiation_mode': 'quarterly',
+    'pf_balancing': 'unbalanced',
+    'time_range': [(2012, 1), (2018, 4)],
     'bin_count': 5,
+    'tax_rate': 0,
+    'histogram_date_span_ratio': 0.5,
     'report_type': ['10-K', '10-Q'],
     'sections_to_parse_10k': [],
     'sections_to_parse_10q': [],
@@ -103,8 +109,8 @@ _s = {
 # In[5]:
 
 
-_s['pf_init_value'] = 1000000
-_s['epsilon'] = 0.0001  # Rounding error
+_s['pf_init_value'] = 100.0  # In points
+_s['epsilon'] = 0.001  # Rounding error
 # Calculated settings
 _s['list_qtr'] = qtrs.create_qtr_list(_s['time_range'])
 
@@ -115,8 +121,11 @@ elif _s['bin_count'] == 10:
 else:
     raise ValueError('[ERROR] This type of bin has not been implemented yet.')
 
+# Create diff metrics and sing metrics
+_s['diff_metrics'] = [m for m in _s['metrics'] if m[:4] == 'diff']
+_s['sing_metrics'] = [m for m in _s['metrics'] if m[:4] == 'sing']
 # Reports considered to calculate the differences
-if _s['differentiation_mode'] == 'monthly':
+if _s['differentiation_mode'] == 'quarterly':
     _s['lag'] = 1
     _s['sections_to_parse_10k'] = ['1a', '3', '7', '7a', '9a']
     _s['sections_to_parse_10q'] = ['_i_2', '_i_3', '_i_4', 'ii_1', 'ii_1a']
@@ -125,14 +134,18 @@ elif _s['differentiation_mode'] == 'yearly':
     _s['sections_to_parse_10k'] = ['1a', '3', '7', '7a', '9a']
     _s['sections_to_parse_10q'] = ['_i_2', '_i_3', '_i_4', 'ii_1', 'ii_1a']
 
-_s['intersection_table'] = {
+_s['common_quarterly_sections'] = {
         '10-K': ['1a', '3', '7', '7a', '9a'],
         '10-Q': ['ii_1a', 'ii_1', '_i_2', '_i_3', '_i_4']
 }  # Exhibits are not taken into account
-_s['straight_table'] = {
+"""_s['common_yearly_sections'] = {
     '10-K': ['1', '1a', '1b', '2', '3', '4', '5', '6', '7', '7a', '8', '9', '9a', '9b', '10', '11', '12', '13', '14', '15'],
     '10-Q': ['_i_1', '_i_2', '_i_3', '_i_4', 'ii_1', 'ii_1a', 'ii_2', 'ii_3', 'ii_4', 'ii_5', 'ii_6']
-}
+}"""
+_s['common_yearly_sections'] = {
+    '10-K': ['7'],
+    '10-Q': ['_i_2']
+}  # Take into account 
 
 
 # In[6]:
@@ -148,6 +161,18 @@ s.set_read_state(read_only=True)  # Set as read only
 
 # # Load external tables
 
+# In[7]:
+
+
+connector = psycopg2.connect(host="localhost", dbname="postgres", user="postgres", password="1")
+
+
+# In[ ]:
+
+
+postgres.settings_to_postgres(connector, s)
+
+
 # ## Extract the list of CIK for which we have complete data
 
 # The main problem in our case is that we have 3 different database to play with:
@@ -159,7 +184,7 @@ s.set_read_state(read_only=True)  # Set as read only
 
 # ### Load the sentiment analysis dictionary
 
-# In[8]:
+# In[ ]:
 
 
 lm_dictionary = Load_MasterDictionary.load_masterdictionary(s['path_master_dictionary'], True)
@@ -178,7 +203,7 @@ cik_path = pre_processing.load_cik_path(s)
 # In[ ]:
 
 
-lookup = pre_processing.load_lookup(s)
+lookup, reverse_lookup = postgres.retrieve_lookup(connector)
 print("[INFO] Loaded {:,} CIK/Tickers correspondances.".format(len(lookup)))
 
 
@@ -197,7 +222,7 @@ print("cik_path: {:,} CIK | lookup: {:,} CIK"
 
 
 # Load all stock prices
-stock_data = pre_processing.load_stock_data(s)
+stock_data = postgres.retrieve_all_stock_data(connector, 'stock_data')
 
 
 # In[ ]:
@@ -214,7 +239,7 @@ print("lookup: {:,} tickers | stock_data: {:,} tickers"
 # In[ ]:
 
 
-index_data = pre_processing.load_index_data(s)
+index_data = postgres.retrieve_all_stock_data(connector, 'index_data')
 print("[INFO] Loaded the following index data:", list(index_data.keys()))
 
 
@@ -269,37 +294,28 @@ print("- The stock data is available for that ticker")
 print("- There is one and only one report per quarter")
 
 
+# ## Dump all the data to postgres
+# This is done so that the Flask webapp can retrieve the settings that were used at a later time.
+
 # In[ ]:
 
 
-"""
-# [USER SETTINGS]
-example = 'apple'  # Debug
-# Examples of companies
-example_companies = {
-    'apple': ['AAPL', 320193],
-    'baxter': ['BAX', 10456],
-    'facebook': ['FB', 1326801],
-    'google': ['GOOGL', 1652044],
-    'microsoft': ['MSFT', 789019],
-    'amazon': ['AMZN', 1018724],
-    'johnson': ['JNJ', 200406],
-    'jpmorgan': ['JPM', 19617]
-}
+print(list(cik_path.keys()).index(10456))  # Find BAX
 
-# [DEBUG]: isolate a subset of companies
-company = 'apple'
-cik_path = {
-    example_companies['apple'][1]: cik_path[example_companies['apple'][1]],
-    example_companies['microsoft'][1]: cik_path[example_companies['microsoft'][1]],
-    example_companies['jpmorgan'][1]: cik_path[example_companies['jpmorgan'][1]],
-    example_companies['amazon'][1]: cik_path[example_companies['amazon'][1]],
-    example_companies['johnson'][1]: cik_path[example_companies['johnson'][1]],
-    
-}
-cik_path.keys()
-"""
 
+# connector = psycopg2.connect(host="localhost", dbname="postgres", user="postgres", password="1")
+
+# postgres.settings_to_postgres(connector, s)
+
+# header_lookup = (('CIK', 'integer'), ('TICKER', 'text'))
+# postgres.lookup_to_postgres(connector, lookup, header_lookup)
+
+# header = (('TICKER', 'text'), ('TIMESTAMP', 'date'), 
+#           ('ASK', 'float'), ('MARKET_CAP', 'float'))
+# path = os.path.join(home, 'Desktop/Insight project/Database/stock_data_filtered.csv')
+# postgres.stock_data_csv_to_postgres(connector, path, header)
+
+# stock_data_2 = postgres.retrieve_stock_data(connector)
 
 # # Parse files
 
@@ -316,7 +332,13 @@ try:
     sc.stop()
 except:
     pass
-nb_processes_requested = 0
+nb_processes_requested = 8
+
+
+# In[ ]:
+
+
+nb_processes_requested = 8
 
 
 # In[ ]:
@@ -325,7 +347,9 @@ nb_processes_requested = 0
 # Processing the reports will be done in parrallel in a random order
 # Settings in s are cast to dict for pickling - the custom class is not supported
 nb_cik_to_process = 100
-cik_path = {k: v for k, v in cik_path.items() if k in list(cik_path.keys())[:nb_cik_to_process]}
+cik_path = {k: cik_path[k] for k in cik_path.keys() if k in list(cik_path.keys())[:nb_cik_to_process]}
+
+# print(list(cik_path.keys()).index(10456))  # Find BAX
 cik_scores = {k: 0 for k in cik_path.keys()}  # Organized by ticker
 data_to_process = ([k, v, {**s}, lm_dictionary] for k, v in cik_path.items())
 assert cik_path.keys() == cik_scores.keys()
@@ -355,6 +379,7 @@ if nb_processes_requested > 1:
 
 elif nb_processes_requested == 1:
     print("[INFO] Running on {} core (multiprocessing is off)".format(nb_processes_requested))
+    # print(list(data_to_process))
     with tqdm(total=nb_cik_to_process) as pbar:
         for i, value in tqdm(enumerate(map(processing.process_cik, data_to_process))):
             pbar.update()
@@ -390,7 +415,8 @@ elif nb_processes_requested == 0:
             processing_stats[value[2]] += 1
            
         #qtr_metric_result[value['0']['qtr']] = value
-print("[INFO] {} CIK failed to be processed.".format(sum(processing_stats[1:])))
+
+print("[INFO] {} CIK were successfully processed - {}/{} CIK failed.".format(len(cik_scores), len(cik_path)-len(cik_scores), len(cik_path)))
 print("Detailed stats and error codes:", processing_stats)
 
 
@@ -401,207 +427,300 @@ print("Detailed stats and error codes:", processing_stats)
 # In[ ]:
 
 
-# Reorganize the dict to display the data per quarter instead
-qtr_scores = {qtr: {} for qtr in s['list_qtr']}
-for c in cik_path.keys():
-    if c in cik_scores.keys():
-        if cik_scores[c] == 0:
-            del cik_scores[c]
-
-for cik in tqdm(cik_scores):
-    for qtr in cik_scores[cik]:
-        qtr_scores[qtr][cik] = cik_scores[cik][qtr]
-
-assert list(qtr_scores.keys()) == s['list_qtr']
-
-
-# ## Create a separate dictionary for each metric
-
-# In[ ]:
-
-
-# Create the new empty master dictionary
-master_dict = {m: 0 for m in s['metrics']}
-for m in s['metrics']:
-    master_dict[m] = {qtr: 0 for qtr in s['list_qtr']}
-# master_dict
+metric_scores = post_processing.create_metric_scores(cik_scores, lookup, stock_data, s)
 
 
 # In[ ]:
 
 
-# Populate it
-for m in s['metrics']:
-    for qtr in s['list_qtr']:
-        #master_dict[m][qtr] = {cik: qtr_scores[qtr][cik][m] for cik in qtr_scores[qtr].keys()}
-        master_dict[m][qtr] = [(cik, qtr_scores[qtr][cik][m]) for cik in qtr_scores[qtr].keys()]
-
-
-# In[ ]:
-
-
-# Display the length for all qtr
-for qtr in s['list_qtr']:
-    print("qtr: {} length: {}".format(qtr, len(master_dict[s['metrics'][0]][qtr])))
-
-
-# ## For each metric, split each qtr into 5 quintiles
-# 
-# For each metric and for each quarter, make quintiles containing all the (cik, score) tuples. 
-# 
-# Now at this point the portfolio is not balanced, it is just the list of companies we would like to invest in. We need to weigh each investment by the relative market cap. 
-
-# In[ ]:
-
-
-# Populate it
-# The two zeros are respectively nb shares unbalanced & balanced
-for m in s['metrics']:
-    for qtr in s['list_qtr']:
-        #master_dict[m][qtr] = {cik: qtr_scores[qtr][cik][m] for cik in qtr_scores[qtr].keys()}
-        master_dict[m][qtr] = [[cik, qtr_scores[qtr][cik][m], 0, 0] for cik in qtr_scores[qtr].keys()]
-# master_dict
-
-
-# In[ ]:
-
-
-# Reorganize each quarter 
-for m in s['metrics'][:-1]:
-    for qtr in s['list_qtr'][s['lag']:]:  # There cannot be a report for the first few qtr
-        #print(master_dict[m][qtr])
-        try:
-            master_dict[m][qtr] = post_processing.make_quintiles(master_dict[m][qtr], s)
-        except:
-            #print(master_dict[m][qtr])
-            raise
-        assert len(master_dict[m][qtr].keys()) == 5
-
-
-# In[ ]:
-
-
-pf_scores = {m: 0 for m in s['metrics'][:-1]}
-for m in s['metrics']:
-    pf_scores[m] = {q: {qtr: 0 for qtr in s['list_qtr'][s['lag']:]} for q in s['bin_labels']}
-
-
-# In[ ]:
-
-
-for m in s['metrics'][:-1]:
-    for mod_bin in s['bin_labels']:
-        for qtr in s['list_qtr'][s['lag']:]:
-            pf_scores[m][mod_bin][qtr] = master_dict[m][qtr][mod_bin]
-# pf_scores['diff_jaccard']['Q1']
-
-
-# In[ ]:
-
-
-post_processing.dump_master_dict(master_dict, s)
-
-
-# In[ ]:
-
-
-del master_dict
-
-
-# ## Create a virtual portfolio
-# 
-# Re-calculate the value of the portfolio at the end of each quarter.
-
-# ### Remove all the CIK for which we do not have stock data for this time period
-
-# In[ ]:
-
-
-pf_scores = post_processing.remove_cik_without_price(pf_scores, lookup, stock_data, s)
-
-
-# In[ ]:
-
-
-# Create the new empty master dictionary
-tax_rate = 0.005
-pf_values = {m: 0 for m in s['metrics'][:-1]}
-for m in s['metrics'][:-1]:
-    pf_values[m] = {q: {qtr: [0, tax_rate, 0] for qtr in s['list_qtr'][1:]} for q in s['bin_labels']}
-
-
-# ## Initialize the portfolio with an equal amount for all bins
-
-# In[ ]:
-
-
-for m in s['metrics'][:-1]:
-    for mod_bin in s['bin_labels']:
-        pf_values[m][mod_bin][s['list_qtr'][s['lag']]] = [s['pf_init_value'], tax_rate, s['pf_init_value']]
-#print(pf_values['diff_jaccard'])
-
-
-# ## Calculate the value of the portfolio
-
-# In[ ]:
-
-
-pf_scores = post_processing.calculate_portfolio_value(pf_scores, pf_values, lookup, stock_data, s)
-
-
-# In[ ]:
-
-
-post_processing.dump_pf_values(pf_values, s)
-
-
-# In[ ]:
-
-
-index_name = 'SPX'
-display.diff_vs_benchmark(pf_values, index_name, index_data, s)
-
-
-# In[ ]:
-
-
-# Output the data for the pf value
+print("[INFO] Number of companies that do not have data for a given qtr.")
+print("This is because they are listed later in the time_range")
 for qtr in s['list_qtr'][s['lag']:]:
-    print(qtr, pf_values['diff_jaccard']['Q5'][qtr][0])
+    print(qtr, "{}/{}".format(len([cik for cik in metric_scores['diff_jaccard'][qtr] 
+                    if metric_scores['diff_jaccard'][qtr][cik] == {}]), len(cik_scores)))
 
 
 # In[ ]:
 
 
-# [DEBUG] Show the Apple data for that time period
-# extracted_cik_scores = cik_scores[data_to_process[0][0]]
-data_to_process = ([k, v, {**s}, lm_dictionary] for k, v in cik_path.items())
-cik = next(data_to_process)[0]
-extracted_cik_scores = cik_scores[cik]
-# extracted_cik_scores
+df = post_processing.metrics_correlation(metric_scores, s)
 
 
 # In[ ]:
 
 
-post_processing.dump_cik_scores(cik_scores, s)
+df.head()
 
 
 # In[ ]:
 
 
-#ticker = lookup[320193]
-ticker = lookup[cik]
-start_date = qtrs.qtr_to_day(s['time_range'][0], 'first', date_format='datetime')
-stop_date = qtrs.qtr_to_day(s['time_range'][1], 'last', date_format='datetime')
+df.corr()
 
-#print(s['time_range'], start_date)
-#print(s['time_range'], stop_date)
-extracted_stock_data = {k: v for k, v in stock_data[ticker].items() if start_date <= k <= stop_date}
-#print(extracted_data)
+
+# In[ ]:
+
+
+df.info()
+
+
+# In[ ]:
+
+
+# Create the quintiles - do not re-run that cell or it will crash!
+for m in s['metrics']:
+    for qtr in s['list_qtr'][s['lag']:]:
+        metric_scores[m][qtr] = post_processing.make_quintiles(metric_scores[m][qtr], s)
+
+
+# In[ ]:
+
+
+# Sanity check: Verify that there are no CIK left for which we do not have stock prices.
+pnf = []
+for m in s['metrics']:
+    for qtr in s['list_qtr'][s['lag']:]:
+        for l in s['bin_labels']:
+            for cik in metric_scores[m][qtr][l]:
+                _, _, flag_price_found = post_processing.get_share_price(cik, qtr, lookup, stock_data)
+                if not flag_price_found:
+                    print("[WARNING] [{}] No stock data for {} during {}".format(m, cik, qtr))
+                    pnf.append(cik)
+print("Unique cik", set(pnf))           
+
+
+# In[ ]:
+
+
+# metric_scores['diff_jaccard'][(2013, 1)]  # After
+
+
+# In[ ]:
+
+
+pf_values = post_processing.initialize_portfolio(metric_scores, s)
+
+
+# In[ ]:
+
+
+# pf_values['diff_jaccard'][(2013, 2)]
+
+
+# In[ ]:
+
+
+pf_values = post_processing.build_portfolio(pf_values, lookup, stock_data, s)
+
+
+# In[ ]:
+
+
+post_processing.check_pf_value(pf_values, s)
+
+
+# In[ ]:
+
+
+# pf_values['diff_jaccard'][(2013, 2)]
+
+
+# ## Export the data to postgres
+
+# In[ ]:
+
+
+connector = psycopg2.connect(host="localhost", dbname="postgres", user="postgres", password="1")
+
+
+# ## cik_scores
+
+# In[ ]:
+
+
+cik_scores[851968][(2013, 1)].keys()
+
+
+# In[ ]:
+
+
+header_cik_scores = (('CIK', 'integer'), ('QTR', 'text'), 
+                     ('METRIC', 'text'), ('SCORE', 'float'),
+                     ('TYPE', 'text'), ('PUBLISHED', 'date'))
+
+
+# In[ ]:
+
+
+postgres.cik_scores_to_postgres(connector, cik_scores, header_cik_scores, s)
+
+
+# In[ ]:
+
+
+data = postgres.retrieve_cik_scores(connector, 851968, s)
+
+
+# In[ ]:
+
+
+data[851968][(2013, 1)]
+
+
+# ## metric_scores
+
+# In[ ]:
+
+
+# I.1. Push to csv
+path = s['path_output_folder']
+path_metric_scores = os.path.join(path, 'ms.csv')
+header_metric_score = (('METRIC', 'text'),  ('QUARTER', 'text'),
+                    ('QUINTILE', 'text'), ('CIK', 'integer'), 
+                    ('SECTION', 'text'), ('SCORE', 'float'))
+with open(path_metric_scores, 'w') as f:
+    out = csv.writer(f, delimiter=';')
+    out.writerow(['IDX'] + [h[0] for h in header_metric_score])
+    c = 0
+    for m in metric_scores:
+        for qtr in metric_scores[m]:
+            for l in metric_scores[m][qtr]:
+                for cik in metric_scores[m][qtr][l]:
+                    #sections = [section for section in metric_scores[m][qtr][l][cik] if section != '0' and section != 'total']
+                    for section in metric_scores[m][qtr][l][cik]:
+                        v = metric_scores[m][qtr][l][cik][section]
+                        out.writerow([c, m, qtr, l, cik, section, v])
+                        c += 1
+
+
+# In[ ]:
+
+
+# I.2. Move the csv to postgres
+postgres.csv_to_postgres(connector, 'metric_scores', header_metric_score, path_metric_scores)
+
+
+# In[ ]:
+
+
+# II. Sanity check: retrieve the data and compare to existing values
+ms = postgres.retrieve_ms_values_data(connector, path_metric_scores, s)
+assert ms == metric_scores
+del ms
+
+
+# ## pf_values
+
+# In[ ]:
+
+
+pf_values['diff_jaccard'][(2013, 1)]['incoming_compo']['Q1'][49196]
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+path = s['path_output_folder']
+header_pf_values1 = (('METRIC', 'text'),  ('QUARTER', 'text'),
+                    ('SECTION', 'text'), ('QUINTILE', 'text'),
+                    ('CIK', 'integer'), ('TICKER', 'text'),
+                    ('ASK', 'float'), ('MARKET_CAP', 'bigint'),
+                    ('SHARE_COUNT', 'float'), ('VALUE', 'float'),
+                    ('RATIO_PF_VALUE', 'float'))
+header_pf_values2 = (('METRIC', 'text'),  ('QUARTER', 'text'),
+                    ('SECTION', 'text'), ('QUINTILE', 'text'),
+                    ('PF_VALUE', 'float'))
+
+path1 = os.path.join(path, 'pf_values1.csv')
+# I.1. Dump to csv all the CIK info
+with open(path1, 'w') as f:
+    out = csv.writer(f, delimiter=';')
+    out.writerow(['IDX'] + [h[0] for h in header_pf_values1])
+    c = 0  # Primary key counter
+    for m in pf_values:
+        for qtr in pf_values[m]:
+            for section in ['incoming_compo', 'new_compo']:
+                for l in pf_values[m][qtr][section]:
+                    for cik in pf_values[m][qtr][section][l]:
+                        v = pf_values[m][qtr][section][l][cik]
+                        out.writerow([c, m, qtr, section, l, cik, *v])
+                        c += 1
+
+# I.2. Dump to csv all the pf values 
+path2 = os.path.join(path, 'pf_values2.csv')
+with open(path2, 'w') as f:
+    out = csv.writer(f, delimiter=';')
+    out.writerow(['IDX'] + [h[0] for h in header_pf_values2])
+    c = 0  # Primary key counter
+    for m in pf_values:
+        for qtr in pf_values[m]:
+            for section in ['incoming_value', 'new_value']:
+                for l in pf_values[m][qtr][section]:
+                    v = pf_values[m][qtr][section][l]
+                    out.writerow([c, m, qtr, section, l, v])
+                    c += 1
+
+
+# In[ ]:
+
+
+# I.3. CSV -> Postgres
+postgres.csv_to_postgres(connector, 'pf_values_compo', header_pf_values1, path1)
+postgres.csv_to_postgres(connector, 'pf_values_value', header_pf_values2, path2)
+
+
+# In[ ]:
+
+
+# II. Sanity check: retrieve the data and compare to existing values
+pf = postgres.retrieve_pf_values_data(connector, path1, path2, s)
+assert pf == pf_values
+del pf
 
 
 # # Display the data
+
+# ## Portfolio view
+
+# In[ ]:
+
+
+ylim = [0.7, 1.5]
+fig, ax = plt.subplots(len(s['diff_metrics']), len(index_data), figsize=(15, 10))
+for idx_x, m in enumerate(s['diff_metrics']):
+    for idx_y, index_name in enumerate(index_data):
+        benchmark, bin_data = display.diff_vs_benchmark_ns(pf_values, index_name, index_data, m, s, norm_by_index=True)
+        display.update_ax_diff_vs_benchmark(ax[idx_x, idx_y], benchmark, bin_data, index_name, s, ylim, m)
+
+start = s['time_range'][0]   
+end = s['time_range'][1]
+plt.savefig(os.path.join(s['path_output_folder'], '{}Q{}_{}Q{}_{}_{}_sw-{}_lem-{}.png'
+                         .format(str(start[0])[2:], start[1], 
+                                 str(end[0])[2:], end[1],
+                                 s['differentiation_mode'][0], s['pf_balancing'][0],
+                                 int(s['stop_words']), int(s['lemmatize']))))
+if display.run_from_ipython():
+    plt.show()
+else:
+    plt.close(fig)
+
+
+# In[ ]:
+
+
+index_name = 'RUT'
+diff_method = 'diff_sk_cosine_tf_idf'
+diff_method = 'diff_jaccard'
+# diff_method='diff_gfg_editDistDP'
+benchmark, bin_data = display.diff_vs_benchmark_ns(pf_values, index_name, index_data, diff_method, s, norm_by_index=True)
+display.plot_diff_vs_benchmark(benchmark, bin_data, index_name, s)
+
 
 # ## For a given ticker
 
@@ -610,7 +729,27 @@ extracted_stock_data = {k: v for k, v in stock_data[ticker].items() if start_dat
 # In[ ]:
 
 
-display.diff_vs_stock(extracted_cik_scores, extracted_stock_data, ticker, s, method='diff')
+cik = 851968
+ticker = lookup[cik]
+start_date = qtrs.qtr_to_day(s['time_range'][0], 'first', date_format='datetime')
+stop_date = qtrs.qtr_to_day(s['time_range'][1], 'last', date_format='datetime')
+
+extracted_stock_data = {k: v for k, v in stock_data[ticker].items() if start_date <= k <= stop_date}
+#print(extracted_data)
+extracted_cik_scores = cik_scores[cik]
+
+
+# In[ ]:
+
+
+extracted_stock_data = {k: v for k, v in stock_data[ticker].items() if start_date <= k <= stop_date}
+
+
+# In[ ]:
+
+
+benchmark, metric_data = display.diff_vs_stock(extracted_cik_scores, extracted_stock_data, ticker, s, method='diff')
+display.plot_diff_vs_stock(benchmark, metric_data, ticker, s)
 
 
 # ### Sentiment vs stock price
@@ -618,7 +757,8 @@ display.diff_vs_stock(extracted_cik_scores, extracted_stock_data, ticker, s, met
 # In[ ]:
 
 
-display.diff_vs_stock(extracted_cik_scores, extracted_stock_data, ticker, s, method='sentiment')
+benchmark, metric_data = display.diff_vs_stock(extracted_cik_scores, extracted_stock_data, ticker, s, method='sentiment')
+display.plot_diff_vs_stock(benchmark, metric_data, ticker, s, method='sentiment')
 
 
 # In[ ]:

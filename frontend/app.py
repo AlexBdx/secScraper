@@ -9,14 +9,22 @@ import psycopg2
 import matplotlib
 import numpy as np
 from datetime import datetime
+import os
 
 # Retrieve the settings that were used to perform the last simulation
 connector = psycopg2.connect(host="localhost", dbname="postgres", user="postgres", password="1")
 s = postgres.retrieve_settings(connector)
+metric_options = [{'label': name, 'value': name} for name in s['diff_metrics']]
 lookup, reverse_lookup = postgres.retrieve_lookup(connector)
 stock_data = postgres.retrieve_all_stock_data(connector, 'stock_data')
 index_data = postgres.retrieve_all_stock_data(connector, 'index_data')
-pf_values = postgres.retrieve_pf_values(connector, 'pf_values', s)
+path = s['path_output_folder']
+path1 = os.path.join(path, 'pf_values1.csv')
+path2 = os.path.join(path, 'pf_values2.csv')
+pf_values = postgres.retrieve_pf_values_data(connector, path1, path2, s)
+path_metric_scores = os.path.join(path, 'ms.csv')
+metric_scores = postgres.retrieve_ms_values_data(connector, path_metric_scores, s)
+
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -40,6 +48,12 @@ app.layout = html.Div(children=[
             )
         }
     ),
+    dcc.RangeSlider(id='range_slider',
+    marks={i: '{}'.format(i) for i in range(s['time_range'][0][0], s['time_range'][1][0]+1)},
+    min=s['time_range'][0][0],
+    max=s['time_range'][1][0],
+    value=[s['time_range'][0][0], s['time_range'][1][0]]
+    ), 
     
     dcc.Markdown('''
     ### Visualization mode
@@ -64,13 +78,7 @@ app.layout = html.Div(children=[
     
     dcc.Markdown('#### Differentiation methods'),
     dcc.Checklist(id='metrics',
-        options=[
-            {'label': 'Jaccard', 'value': 'diff_jaccard'},
-            {'label': 'Cosine TF', 'value': 'diff_cosine_tf'},
-            {'label': 'Cosine TF-IDF', 'value': 'diff_cosine_tf_idf'},
-            {'label': 'minEdit', 'value': 'diff_minEdit'},
-            {'label': 'simpleEdit', 'value': 'diff_simple'}
-        ],
+        options=metric_options,
         value=['diff_jaccard', 'diff_cosine_tf']
     ),
     
@@ -125,25 +133,38 @@ app.layout = html.Div(children=[
 
 
 # Callbacks 
+"""
+@app.callback(
+    [Output('main_graph', 'figure')],
+    [Input('range_slider', 'value')],
+    [State('main_graph', 'figure')]
+)
+def update_plot_range(time_range, graph_figure):
+    new_start = time_range[0]
+    new_end = time_range[1]
+    graph_figure['xaxis']['range'] = [new_start, new_end]
+    return graph_figure
+"""
 
 # When the user clicks on Submit, the data for this ticker is retrieved.
 @app.callback(
     [Output('does_ticker_exist', 'children'), Output('main_graph', 'figure')],
-    [Input('button', 'n_clicks')],
+    [Input('button', 'n_clicks'), Input('range_slider', 'value')],
     [State('input_ticker', 'value'), State('metrics', 'value'), 
     State('main_graph', 'figure'), State('view_mode', 'value'),
     State('index_name', 'value'), State('normalize_pf', 'value')]
 )
-def update_display(input_button, input_ticker, metrics, graph_figure, visualization_mode, index_name, norm):
+def update_display(input_button, tr, input_ticker, metrics, graph_figure, visualization_mode, index_name, norm):
     # Check if that input_ticker exists in our stock database
     connector = psycopg2.connect(host="localhost", dbname="postgres", user="postgres", password="1")
+    
     if visualization_mode == 'company_view':
-        user_message, graph_figure = update_company_view(input_ticker, metrics, graph_figure)
+        user_message, graph_figure = update_company_view(input_ticker, metrics, graph_figure, tr)
     elif visualization_mode == 'pf_view':
-        user_message, graph_figure = update_pf_view(index_name, metrics, graph_figure, norm)
+        user_message, graph_figure = update_pf_view(index_name, metrics, graph_figure, norm, tr)
     return user_message, graph_figure
 
-def update_company_view(input_ticker, metrics, graph_figure):
+def update_company_view(input_ticker, metrics, graph_figure, tr):
     input_ticker = input_ticker.upper()
     flag_ticker_exist = postgres.does_ticker_exist(connector, input_ticker)
     try:  # Get the CIK corresponding to this ticker via SQL query
@@ -167,12 +188,16 @@ def update_company_view(input_ticker, metrics, graph_figure):
         #print(benchmark_x)
         #print(benchmark_y)
         # 2. Partially rebuild the graph_figure
+        start = str(tr[0])+'0101'
+        end = str(tr[1])+'1231'
+        start = datetime.strptime(start, '%Y%m%d').date()
+        end = datetime.strptime(end, '%Y%m%d').date()
         graph_figure = {
             'data': [
                 {'x': benchmark_x, 'y': benchmark_y, 'type': 'scatter', 'name': input_ticker}
             ],
             'layout': go.Layout(
-            xaxis={'title': 'Historical records', },
+            xaxis={'title': 'Historical records', 'range': [start, end]},
             yaxis={'title': 'Stock price [$]', 'showgrid': False},
             yaxis2={'title': 'Score [0-1]', 'overlaying': 'y', 'side': 'right', 'range': [0, 1], 'showgrid': False},
             title={'text': 'Stock price for {} (CIK: {})'.format(input_ticker, cik)}
@@ -180,7 +205,7 @@ def update_company_view(input_ticker, metrics, graph_figure):
         }
         
         metric_names = [m for m in s['metrics'] if m[:4] == 'diff']
-        for m in metrics:  # Go through the requested metrics
+        for m in metric_names:  # Go through the requested metrics
             position = metric_names.index(m)  
             data = metric_data[position]
             x, y = zip(*data)
@@ -194,13 +219,13 @@ def update_company_view(input_ticker, metrics, graph_figure):
         user_message = "Ticker {} not found in database.".format(input_ticker)
     return user_message, graph_figure
 
-def update_pf_view(index_name, metrics, graph_figure, norm):
+def update_pf_view(index_name, metrics, graph_figure, norm, tr):
     # 0. Config
     metric = metrics[0]  # You should only have one selected
     norm_by_index = True if len(norm) else False
 
     # 1. Retrieve
-    benchmark, bin_data = display.diff_vs_benchmark(pf_values, index_name, index_data, s, norm_by_index=norm_by_index)
+    benchmark, bin_data = display.diff_vs_benchmark_ns(pf_values, index_name, index_data, metric, s, norm_by_index=norm_by_index)
     nb_bins = len(bin_data)
     if nb_bins == 5:
         prefix = 'Q'
@@ -211,10 +236,14 @@ def update_pf_view(index_name, metrics, graph_figure, norm):
     
     benchmark_x, benchmark_y = zip(*benchmark)
     
+    start = str(tr[0])+'0101'
+    end = str(tr[1])+'1231'
+    start = datetime.strptime(start, '%Y%m%d').date()
+    end = datetime.strptime(end, '%Y%m%d').date()
     graph_figure = {
     'data': [], 
     'layout': go.Layout(
-    xaxis={'title': 'Historical records'},
+    xaxis={'title': 'Historical records', 'range': [start, end]},
     yaxis={'title': 'Portfolio value'},
     title={'text': 'Portfolio benchmark against {} for different bins (differentiation: {})'.format(index_name, metric)}
     )}
@@ -225,10 +254,9 @@ def update_pf_view(index_name, metrics, graph_figure, norm):
 
     
     # 3. Add all the quintiles/deciles for a given metric. We plot all of of them
-    for idx, bin_entry in enumerate(bin_data):
-        x, y = zip(*bin_entry)
-        bin_name = prefix + str(idx+1)
-        graph_figure['data'].append({'x': x, 'y': y, 'type': 'scatter', 'name': bin_name})
+    for l in s['bin_labels']:
+        x, y = zip(*bin_data[l])
+        graph_figure['data'].append({'x': x, 'y': y, 'type': 'scatter', 'name': l})
 
     # print(graph_figure['data'])
     

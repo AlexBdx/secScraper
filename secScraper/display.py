@@ -49,7 +49,9 @@ def diff_vs_stock(qtr_metric_result, ticker_data, ticker, s, method='diff'):
         metrics = s['sing_metrics']
     else:
         raise ValueError('[ERROR] Method unknown')
-    
+
+    if not metrics:
+        raise ValueError("[ERROR] No metrics were computed for method {}.".format(method))
 
     # 1. Display the stock data
     lists = sorted(ticker_data.items())  # sorted by key, return a list of tuples
@@ -80,7 +82,7 @@ def diff_vs_stock(qtr_metric_result, ticker_data, ticker, s, method='diff'):
                 elif method == 'sentiment':
                     position = center
                 x.append(matplotlib.dates.num2date(position).date())
-                y.append(qtr_metric_result[qtr][m])
+                y.append(qtr_metric_result[qtr]['total'][m])
 
         metric_data.append(zip(x, y))
     
@@ -96,7 +98,8 @@ def plot_diff_vs_stock(benchmark, metric_data, ticker, s, method='diff'):
         metrics = s['sing_metrics']
     else:
         raise ValueError('[ERROR] Method unknown')
-        
+    
+    
     fig, ax1 = plt.subplots(figsize=(15, 5))
     #benchmark_x, benchmark_y = zip(*benchmark)
     
@@ -194,6 +197,76 @@ def diff_vs_benchmark(pf_values, index_name, index_data, diff_method, s, norm_by
     
     # Actually plot now that all the data is available
     return benchmark, bin_data
+
+
+def diff_vs_benchmark_ns(pf_values, index_name, index_data, diff_method, s, norm_by_index=False):
+    """
+    Plot a portfolio vs an index.
+
+    :param pf_values: Value of the portfolio over time.
+    :param index_name: Name of the index.
+    :param index_data: Daily value of the index.
+    :param s: Settings dictionary.
+    :return: void
+    """
+
+    """Display an index"""
+    benchmark_x = []
+    benchmark_y = []
+    for qtr in s['list_qtr'][s['lag']:]:
+        qtr_start_date = "{}{}{}".format(str(qtr[0]), str((qtr[1]-1)*3+1).zfill(2), '01')
+        qtr_start_date = datetime.strptime(qtr_start_date, '%Y%m%d').date()
+        # days, _ = zip(*index_data[index_name])
+        days, prices = zip(*index_data[index_name].items())
+        
+        # Find the nearest daily price
+        for _ in range(7):
+            try:
+                idx = days.index(qtr_start_date)
+                break
+            except ValueError:  # The stock exchange was closed that day. Move to the next one.
+                qtr_start_date = qtr_start_date.strftime('%Y%m%d')
+                day = str(int(qtr_start_date[7]) + 1)
+                qtr_start_date = qtr_start_date[:7] + day
+                qtr_start_date = datetime.strptime(qtr_start_date, '%Y%m%d').date()
+        try:
+            benchmark_x.append(qtr_start_date)
+            benchmark_y.append(prices[idx][0])  # Only one entry per timestamp
+            
+        except KeyError:
+            raise KeyError('[ERROR] The stock exchange should not have been shut down for more than 7 days.')
+    benchmark_y = [value*s['pf_init_value']/benchmark_y[0] for value in benchmark_y]
+    
+    """Norm by index or not?"""
+    if norm_by_index:
+        norm = benchmark_y
+        benchmark_y = [-s['pf_init_value']]*len(norm)  # Nullify the index data
+    else:
+        norm = [1]*len(benchmark_y)
+        # plt.plot_date(benchmark_x, benchmark_y, label=index_name, linestyle='-.', linewidth=2, ms=10, marker=',')
+    benchmark = zip(benchmark_x, benchmark_y)  # Zip for plotting
+    
+    """Display all the quintiles/deciles"""
+    bin_data = dict()
+    for l in s['bin_labels']:
+        x = list()
+        y = list()
+        for qtr in s['list_qtr'][s['lag']:]:
+            # Assign the quarterly value to tghe first day of the quarter
+            start = "{}{}{}".format(str(qtr[0]), str(((qtr[1])-1)*3+1).zfill(2), '01')
+            x.append(datetime.strptime(start, '%Y%m%d').date())
+            y.append(pf_values[diff_method][qtr]['incoming_value'][l])  # Use value before taxes
+        # Divide each value by the norm. 
+        # It is 1 if not norm_by_index, or the value of the index otherwise
+        y = [qx_value/benchmark_value for qx_value, benchmark_value in zip(y, norm)]
+        # plt.plot_date(x, y, label=l, linestyle='-')
+        
+        # Zip the resulting plot data 
+        bin_data[l] = zip(x, y)
+    
+    # Actually plot now that all the data is available
+    return benchmark, bin_data
+
 
 def plot_diff_vs_benchmark(benchmark, bin_data, index_name, s):
     # bin_data is a list
