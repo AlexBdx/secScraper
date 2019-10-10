@@ -2,9 +2,11 @@ from datetime import datetime
 from secScraper import metrics
 from secScraper import parser
 import nltk
+"""
 nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('wordnet')
+"""
 
 from nltk.corpus import stopwords 
 from nltk.tokenize import word_tokenize, regexp_tokenize
@@ -351,6 +353,7 @@ def analyze_reports(current, previous, s, lm_dictionary):
         for m in s['metrics']:
             total[m] += result[section][m]/nb_sections
     result['total'] = total
+    result['0'] = current['0']  # Transfer the metadata
     #print(final_result)
     #print(result)
     #assert 0

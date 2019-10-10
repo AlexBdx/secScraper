@@ -2,6 +2,7 @@ import psycopg2
 from tqdm import tqdm
 import ast
 from datetime import datetime
+import csv
 
 def delete_table(connector, name_table):
     cur = connector.cursor()
@@ -81,7 +82,7 @@ def cik_scores_to_postgres(connector, cik_scores, header, s):
                 try:
                     md = cik_scores[cik][qtr]['0']  # Metadata
                     insert_row(connector, 'cik_scores', 
-                               (idx, cik, qtr, m, cik_scores[cik][qtr][m], md['type'], md['published']))
+                               (idx, cik, qtr, m, cik_scores[cik][qtr]['total'][m], md['type'], md['published']))
                     idx += 1
                 except KeyError:  # There is no data for this qtr, CIK not listed/delisted
                     continue
@@ -95,7 +96,7 @@ def csv_to_postgres(connector, table_name, header, path):
         cur.copy_from(f, table_name, sep=';')
         connector.commit()
 
-
+"""
 # Build the plot based on a PostGres query
 def retrieve_pf_values(connector, table_name, s):
     sql_query = "SELECT * FROM {};".format(table_name)
@@ -113,6 +114,71 @@ def retrieve_pf_values(connector, table_name, s):
     for e in data:
         pf_values[e[1]][e[3]][ast.literal_eval(e[2])] = [*e[4:]]
     return pf_values
+"""
+
+def retrieve_pf_values(connector, name_compo, name_value, s):
+    sql_query = "SELECT * FROM {};".format(name_compo)
+    print(sql_query)
+    cur = connector.cursor()
+    cur.execute(sql_query)
+    data = cur.fetchall()
+    
+    # Re-initialize pf_values
+    """
+    pf_values = {m: 
+    {qtr: 
+    {section: 
+    {l: {}
+    for l in s['bin_labels']} 
+    for section in ['incoming_compo', 'new_compo', 'incoming_value', 'new_value']} 
+    for qtr in s['list_qtr']} 
+    for m in s['metrics']}
+    """
+
+
+def retrieve_pf_values_data(connector, path1, path2, s):
+    pf = {m: 
+        {qtr: 
+        {section: 
+        {l: {}
+        for l in s['bin_labels']} 
+        for section in ['incoming_compo', 'new_compo', 'incoming_value', 'new_value']} 
+        for qtr in s['list_qtr'][s['lag']:]} 
+        for m in s['metrics']}
+
+    with open(path1) as f:
+        reader = csv.reader(f, delimiter=';')
+        next(reader)
+        for e in tqdm(reader):
+            qtr = ast.literal_eval(e[2])
+            pf[e[1]][qtr][e[3]][e[4]][int(e[5])] = [e[6], float(e[7]), int(e[8]), float(e[9]), float(e[10]), float(e[11])]
+    with open(path2) as f:
+        reader = csv.reader(f, delimiter=';')
+        next(reader)
+        for e in tqdm(reader):
+            qtr = ast.literal_eval(e[2])
+            pf[e[1]][qtr][e[3]][e[4]] = float(e[5])
+    return pf
+
+
+def retrieve_ms_values_data(connector, path, s):
+    ms = {m: 
+        {qtr:  
+        {l: {}
+        for l in s['bin_labels']} 
+        for qtr in s['list_qtr'][s['lag']:]} 
+        for m in s['metrics']}
+
+    with open(path) as f:
+        reader = csv.reader(f, delimiter=';')
+        next(reader)
+        for e in tqdm(reader):
+            qtr = ast.literal_eval(e[2])
+            if not int(e[4]) in ms[e[1]][qtr][e[3]]:
+                ms[e[1]][qtr][e[3]][int(e[4])] = {}
+            ms[e[1]][qtr][e[3]][int(e[4])][e[5]] = float(e[6])
+
+    return ms
 
 
 def retrieve_settings(connector):
@@ -153,9 +219,9 @@ def retrieve_cik_scores(connector, cik, s):
     data = cur.fetchall()
     #print(data)
     # Initialize
-    result = {cik: {qtr: {} for qtr in s['list_qtr']}}
+    result = {cik: {qtr: {'total': {}} for qtr in s['list_qtr'][s['lag']:]}}
     for e in data:
-        result[cik][ast.literal_eval(e[2])][e[3]] = e[4]
+        result[cik][ast.literal_eval(e[2])]['total'][e[3]] = e[4]
         result[cik][ast.literal_eval(e[2])]['0'] = {
             'type': e[5],
             'published': e[6],
