@@ -167,7 +167,7 @@ s.set_read_state(read_only=True)  # Set as read only
 connector = psycopg2.connect(host="localhost", dbname="postgres", user="postgres", password="1")
 
 
-# In[ ]:
+# In[8]:
 
 
 postgres.settings_to_postgres(connector, s)
@@ -184,7 +184,7 @@ postgres.settings_to_postgres(connector, s)
 
 # ### Load the sentiment analysis dictionary
 
-# In[ ]:
+# In[9]:
 
 
 lm_dictionary = Load_MasterDictionary.load_masterdictionary(s['path_master_dictionary'], True)
@@ -192,7 +192,7 @@ lm_dictionary = Load_MasterDictionary.load_masterdictionary(s['path_master_dicti
 
 # ### Find all the unique CIK from the SEC filings
 
-# In[ ]:
+# In[10]:
 
 
 cik_path = pre_processing.load_cik_path(s)
@@ -200,14 +200,14 @@ cik_path = pre_processing.load_cik_path(s)
 
 # ### Get the largest {CIK: ticker} possible given our lookup table
 
-# In[ ]:
+# In[11]:
 
 
 lookup, reverse_lookup = postgres.retrieve_lookup(connector)
 print("[INFO] Loaded {:,} CIK/Tickers correspondances.".format(len(lookup)))
 
 
-# In[ ]:
+# In[12]:
 
 
 cik_path, lookup = pre_processing.intersection_sec_lookup(cik_path, lookup)
@@ -218,14 +218,14 @@ print("cik_path: {:,} CIK | lookup: {:,} CIK"
 
 # ### Load stock data and drop all CIKs for which we don't have data
 
-# In[ ]:
+# In[13]:
 
 
 # Load all stock prices
 stock_data = postgres.retrieve_all_stock_data(connector, 'stock_data')
 
 
-# In[ ]:
+# In[14]:
 
 
 lookup, stock_data = pre_processing.intersection_lookup_stock(lookup, stock_data)
@@ -236,7 +236,7 @@ print("lookup: {:,} tickers | stock_data: {:,} tickers"
 
 # ### Load stock indexes - will serve as benchmark later on
 
-# In[ ]:
+# In[15]:
 
 
 index_data = postgres.retrieve_all_stock_data(connector, 'index_data')
@@ -247,7 +247,7 @@ print("[INFO] Loaded the following index data:", list(index_data.keys()))
 
 # Technically, we have just done it for lookup. So we only need to re-run an intersection for lookup and sec.
 
-# In[ ]:
+# In[16]:
 
 
 cik_path, lookup = pre_processing.intersection_sec_lookup(cik_path, lookup)
@@ -262,7 +262,7 @@ print("cik_path: {:,} CIK | lookup: {:,} CIK"
 # 
 # However, multiple CIK can redirect to the same ticker if the company changed its ticker over time. That should be a very limited amount of cases though.
 
-# In[ ]:
+# In[17]:
 
 
 assert cik_path.keys() == lookup.keys()
@@ -276,7 +276,7 @@ assert len(set(lookup.values())) == len(set(stock_data.keys()))
 # In this section, the goal is to build a list of CIK that will successfully be parsed for the time_range considered.
 # It should be trivial for a vast majority of the CIK, but ideally there should be only one document per quarter for each CIK from the moment they are listed to the moment they are delisted.
 
-# In[ ]:
+# In[18]:
 
 
 # Create the list of quarters to consider
@@ -285,11 +285,11 @@ print("[INFO] Removed all the CIK that did not have one report per quarter.")
 print("cik_dict: {:,} CIK".format(len(cik_path)))
 
 
-# In[ ]:
+# In[24]:
 
 
 print("[INFO] We are left with {:,} CIKs that meet our requirements:".format(len(cik_path)))
-print("- The ticker can be looked up in the CIK/ticker tabke")
+print("- The ticker can be looked up in the CIK/ticker table")
 print("- The stock data is available for that ticker")
 print("- There is one and only one report per quarter")
 
@@ -297,7 +297,7 @@ print("- There is one and only one report per quarter")
 # ## Dump all the data to postgres
 # This is done so that the Flask webapp can retrieve the settings that were used at a later time.
 
-# In[ ]:
+# In[20]:
 
 
 print(list(cik_path.keys()).index(10456))  # Find BAX
@@ -325,7 +325,7 @@ print(list(cik_path.keys()).index(10456))  # Find BAX
 # 
 # We use multiprocessing to go through N CIK at once but a single core is dedicated to going through a given CIK for the specified time_range. Such a core can be running for a while if the company has been in business for the whole time_range and publish a lot of text data in its 10-K.
 
-# In[ ]:
+# In[21]:
 
 
 try:
@@ -335,13 +335,13 @@ except:
 nb_processes_requested = 8
 
 
-# In[ ]:
+# In[22]:
 
 
 nb_processes_requested = 8
 
 
-# In[ ]:
+# In[23]:
 
 
 # Processing the reports will be done in parrallel in a random order

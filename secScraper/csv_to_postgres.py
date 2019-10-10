@@ -79,7 +79,7 @@ with open(s['path_filtered_stock_data'], 'w') as f:
 
 
 path = s['path_filtered_stock_data']
-get_ipython().run_line_magic('time', "postgres.csv_to_postgres(connector, 'stock_data', header_stock_data, path)")
+postgres.csv_to_postgres(connector, 'stock_data', header_stock_data, path)
 
 
 # # Optional: retrieve the data
@@ -132,7 +132,7 @@ with open(s['path_filtered_index_data'], 'w') as f:
 
 
 path = s['path_filtered_index_data']
-get_ipython().run_line_magic('time', "postgres.csv_to_postgres(connector, 'index_data', header_index_data, path)")
+postgres.csv_to_postgres(connector, 'index_data', header_index_data, path)
 
 
 # In[14]:
@@ -173,7 +173,7 @@ with open(s['path_filtered_lookup'], 'w') as f:
 
 
 path = s['path_filtered_lookup']
-get_ipython().run_line_magic('time', "postgres.csv_to_postgres(connector, 'lookup', header_lookup, path)")
+postgres.csv_to_postgres(connector, 'lookup', header_lookup, path)
 
 
 # In[19]:
