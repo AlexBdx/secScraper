@@ -62,7 +62,7 @@ if display.run_from_ipython():
     # nb_processes_requested = 1 # From IPython, fixed setting
 else:
     ap = argparse.ArgumentParser()
-    ap.add_argument("-p", "--processes", type=int, default=1, help="Number of processes launched to process the reports.")
+    ap.add_argument("-p", "--processes", type=int, default=mp.cpu_count(), help="Number of processes launched to process the reports.")
     args = vars(ap.parse_args())
     nb_processes_requested = args["processes"]
     if not 1 <= nb_processes_requested <= mp.cpu_count():

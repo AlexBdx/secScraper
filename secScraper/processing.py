@@ -128,7 +128,7 @@ def process_cik(data, verbose=False):
     return cik, quarterly_results, 0
 
 
-def calculate_metrics(current_text, previous_text, s, lm_dictionary):
+def calculate_metrics(current_text, previous_text, s, lm_dictionary, verbose=False):
     """
     Calculate the metrics for a given pair of section text.
 
@@ -167,7 +167,8 @@ def calculate_metrics(current_text, previous_text, s, lm_dictionary):
             elif m == 'diff_gfg_editDistDP':
                 section_result[m] = metrics.diff_gfg_editDistDP(p_current_text[:sample], p_previous_text[:sample])
                 if sample < len(p_current_text) or sample < len(p_previous_text):
-                    print("[WARNING] Text was cut. Current: {}/{} used | Previous: {}/{} used".format(sample, len(p_current_text), sample, len(p_previous_text)))
+                    if verbose:
+                        print("[WARNING] Text was cut. Current: {}/{} used | Previous: {}/{} used".format(sample, len(p_current_text), sample, len(p_previous_text)))
             #elif m == 'diff_minEdit':
                 #section_result[m] = metrics.diff_minEdit(current_text[:sample], previous_text[:sample])
             elif m == 'diff_simple':
