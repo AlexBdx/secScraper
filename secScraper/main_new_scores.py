@@ -59,7 +59,7 @@ import pyspark
 
 if display.run_from_ipython():
     nb_processes_requested = mp.cpu_count()  # From IPython, fixed setting
-    nb_processes_requested = 1 # From IPython, fixed setting
+    # nb_processes_requested = 1 # From IPython, fixed setting
 else:
     ap = argparse.ArgumentParser()
     ap.add_argument("-p", "--processes", type=int, default=1, help="Number of processes launched to process the reports.")
@@ -332,13 +332,7 @@ try:
     sc.stop()
 except:
     pass
-nb_processes_requested = 8
-
-
-# In[22]:
-
-
-nb_processes_requested = 8
+# nb_processes_requested = 8
 
 
 # In[23]:
