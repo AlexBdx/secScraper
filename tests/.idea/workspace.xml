@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="575975d9-2b0d-4e15-b046-76971b57d187" name="Default Changelist" comment="" />
+    <list default="true" id="575975d9-2b0d-4e15-b046-76971b57d187" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/../frontend/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/app.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../secScraper/main_new_scores.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/../secScraper/main_new_scores.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -14,7 +18,7 @@
   <component name="ProjectId" id="1ReCJWpQFQxPfoVZ291O4X0YFCK" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../secScraper/pre_processing.py" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../frontend/app.py" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">

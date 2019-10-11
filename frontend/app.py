@@ -33,6 +33,7 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.layout = html.Div(children=[
     html.Div(children='The secScraper project', style={'textAlign': 'center', 'fontSize': 40}),
     
+    html.Div([
     dcc.Graph(
         id='main_graph',
         figure={
@@ -45,9 +46,14 @@ app.layout = html.Div(children=[
             yaxis={'title': 'Stock price [$]'},
             yaxis2={'title': 'Score [0-1]', 'overlaying': 'y', 'side': 'right', 'range': [0, 1]},
             title={'text': 'Selection pending'},
-            
             )
         }
+    )], style={'width': '100%',
+                      'fontSize': '500%',
+                      'paddingTop': '0%',
+                      'paddingBottom':'0%',
+                      'paddingLeft': '3%',
+                      'display': 'inline-block'}
     ),
     html.Div([
     dcc.RangeSlider(id='range_slider',
@@ -55,7 +61,7 @@ app.layout = html.Div(children=[
     min=s['time_range'][0][0],
     max=s['time_range'][1][0],
     value=[s['time_range'][0][0], s['time_range'][1][0]]
-    )], style={'width': '90%', 'padding-left': '5%', 'padding-right': '5%'}
+    )], style={'width': '90%', 'padding-left': '5%', 'padding-right': '5%', 'fontSize': '100%'}
     ), 
     
     dcc.Markdown('''
