@@ -335,13 +335,14 @@ except:
 # nb_processes_requested = 8
 
 
-# In[22]:
+# In[24]:
 
 
 # Processing the reports will be done in parrallel in a random order
 # Settings in s are cast to dict for pickling - the custom class is not supported
-# nb_cik_to_process = 100
-cik_path = {k: cik_path[k] for k in cik_path.keys() if k in list(cik_path.keys())[:nb_cik_to_process]}
+nb_cik_to_process = len(cik_path.keys())
+# cik_path = {k: cik_path[k] for k in cik_path.keys() if k in list(cik_path.keys())[:nb_cik_to_process]}
+cik_path = {k: cik_path[k] for k in cik_path.keys() if k in list(cik_path.keys())}
 
 # print(list(cik_path.keys()).index(10456))  # Find BAX
 cik_scores = {k: 0 for k in cik_path.keys()}  # Organized by ticker
@@ -418,13 +419,13 @@ print("Detailed stats and error codes:", processing_stats)
 
 # ## Flip the result dictionary to present a per qtr view
 
-# In[23]:
+# In[ ]:
 
 
 metric_scores = post_processing.create_metric_scores(cik_scores, lookup, stock_data, s)
 
 
-# In[24]:
+# In[ ]:
 
 
 print("[INFO] Number of companies that do not have data for a given qtr.")
@@ -434,31 +435,31 @@ for qtr in s['list_qtr'][s['lag']:]:
                     if metric_scores['diff_jaccard'][qtr][cik] == {}]), len(cik_scores)))
 
 
-# In[25]:
+# In[ ]:
 
 
 df = post_processing.metrics_correlation(metric_scores, s)
 
 
-# In[26]:
+# In[ ]:
 
 
 df.head()
 
 
-# In[27]:
+# In[ ]:
 
 
 df.corr()
 
 
-# In[28]:
+# In[ ]:
 
 
 df.info()
 
 
-# In[29]:
+# In[ ]:
 
 
 # Create the quintiles - do not re-run that cell or it will crash!
@@ -467,7 +468,7 @@ for m in s['metrics']:
         metric_scores[m][qtr] = post_processing.make_quintiles(metric_scores[m][qtr], s)
 
 
-# In[30]:
+# In[ ]:
 
 
 # Sanity check: Verify that there are no CIK left for which we do not have stock prices.
@@ -483,37 +484,37 @@ for m in s['metrics']:
 print("Unique cik", set(pnf))           
 
 
-# In[31]:
+# In[ ]:
 
 
 # metric_scores['diff_jaccard'][(2013, 1)]  # After
 
 
-# In[32]:
+# In[ ]:
 
 
 pf_values = post_processing.initialize_portfolio(metric_scores, s)
 
 
-# In[33]:
+# In[ ]:
 
 
 # pf_values['diff_jaccard'][(2013, 2)]
 
 
-# In[34]:
+# In[ ]:
 
 
 pf_values = post_processing.build_portfolio(pf_values, lookup, stock_data, s)
 
 
-# In[35]:
+# In[ ]:
 
 
 post_processing.check_pf_value(pf_values, s)
 
 
-# In[36]:
+# In[ ]:
 
 
 # pf_values['diff_jaccard'][(2013, 2)]
@@ -521,7 +522,7 @@ post_processing.check_pf_value(pf_values, s)
 
 # ## Export the data to postgres
 
-# In[37]:
+# In[ ]:
 
 
 connector = psycopg2.connect(host="localhost", dbname="postgres", user="postgres", password="1")
@@ -529,13 +530,13 @@ connector = psycopg2.connect(host="localhost", dbname="postgres", user="postgres
 
 # ## cik_scores
 
-# In[38]:
+# In[ ]:
 
 
 cik_scores[851968][(2013, 1)].keys()
 
 
-# In[39]:
+# In[ ]:
 
 
 header_cik_scores = (('CIK', 'integer'), ('QTR', 'text'), 
@@ -543,19 +544,19 @@ header_cik_scores = (('CIK', 'integer'), ('QTR', 'text'),
                      ('TYPE', 'text'), ('PUBLISHED', 'date'))
 
 
-# In[40]:
+# In[ ]:
 
 
 postgres.cik_scores_to_postgres(connector, cik_scores, header_cik_scores, s)
 
 
-# In[41]:
+# In[ ]:
 
 
 data = postgres.retrieve_cik_scores(connector, 851968, s)
 
 
-# In[42]:
+# In[ ]:
 
 
 data[851968][(2013, 1)]
@@ -563,7 +564,7 @@ data[851968][(2013, 1)]
 
 # ## metric_scores
 
-# In[43]:
+# In[ ]:
 
 
 # I.1. Push to csv
@@ -587,14 +588,14 @@ with open(path_metric_scores, 'w') as f:
                         c += 1
 
 
-# In[44]:
+# In[ ]:
 
 
 # I.2. Move the csv to postgres
 postgres.csv_to_postgres(connector, 'metric_scores', header_metric_score, path_metric_scores)
 
 
-# In[45]:
+# In[ ]:
 
 
 # II. Sanity check: retrieve the data and compare to existing values
@@ -605,13 +606,13 @@ del ms
 
 # ## pf_values
 
-# In[46]:
+# In[ ]:
 
 
 pf_values['diff_jaccard'][(2013, 1)]['incoming_compo']['Q1'][49196]
 
 
-# In[47]:
+# In[ ]:
 
 
 path = s['path_output_folder']
@@ -655,7 +656,7 @@ with open(path2, 'w') as f:
                     c += 1
 
 
-# In[48]:
+# In[ ]:
 
 
 # I.3. CSV -> Postgres
@@ -663,7 +664,7 @@ postgres.csv_to_postgres(connector, 'pf_values_compo', header_pf_values1, path1)
 postgres.csv_to_postgres(connector, 'pf_values_value', header_pf_values2, path2)
 
 
-# In[49]:
+# In[ ]:
 
 
 # II. Sanity check: retrieve the data and compare to existing values
@@ -676,7 +677,7 @@ del pf
 
 # ## Portfolio view
 
-# In[50]:
+# In[ ]:
 
 
 ylim = [0.7, 1.5]
@@ -699,7 +700,7 @@ else:
     plt.close(fig)
 
 
-# In[51]:
+# In[ ]:
 
 
 index_name = 'RUT'
@@ -714,7 +715,7 @@ display.plot_diff_vs_benchmark(benchmark, bin_data, index_name, s)
 
 # ### Metrics vs stock price
 
-# In[68]:
+# In[ ]:
 
 
 cik = 851968
@@ -727,13 +728,13 @@ extracted_stock_data = {k: v for k, v in stock_data[ticker].items() if start_dat
 extracted_cik_scores = cik_scores[cik]
 
 
-# In[69]:
+# In[ ]:
 
 
 extracted_stock_data = {k: v for k, v in stock_data[ticker].items() if start_date <= k <= stop_date}
 
 
-# In[71]:
+# In[ ]:
 
 
 benchmark, metric_data = display.diff_vs_stock(extracted_cik_scores, extracted_stock_data, ticker, s, method='diff')
@@ -742,7 +743,7 @@ display.plot_diff_vs_stock(benchmark, metric_data, ticker, s)
 
 # ### Sentiment vs stock price
 
-# In[55]:
+# In[ ]:
 
 
 benchmark, metric_data = display.diff_vs_stock(extracted_cik_scores, extracted_stock_data, ticker, s, method='sentiment')
