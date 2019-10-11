@@ -24,7 +24,10 @@ def histogram_width(qtr_metric_result, metrics, s):
     
     for qtr in s['list_qtr'][s['lag']:]:
         # print("Values", qtr_metric_result)
-        center.append(matplotlib.dates.date2num(qtr_metric_result[qtr]['0']['published']))
+        try:
+            center.append(matplotlib.dates.date2num(qtr_metric_result[qtr]['0']['published']))
+        except:
+            pass
     center = np.array(center)
     diff_center = np.diff(center)  # Distance between two groups of histograms
     r = s['histogram_date_span_ratio']
@@ -76,6 +79,9 @@ def diff_vs_stock(qtr_metric_result, ticker_data, ticker, s, method='diff'):
                 print("[ERROR] No data for qtr {}?".format(qtr))
                 continue
             else:
+                #print("qtr", qtr)
+                #print("qtr_metric", qtr_metric_result[qtr])
+                #print(qtr_metric_result)
                 center = matplotlib.dates.date2num(qtr_metric_result[qtr]['0']['published'])
                 if method == 'diff':
                     position = center - width*(len(metrics))/2 + width*ii
