@@ -41,18 +41,21 @@ app.layout = html.Div(children=[
                 {'x': [1, 2, 3], 'y': [2, 4, 5], 'type': 'bar', 'name': 'Metric 2'},
             ],
             'layout': go.Layout(
-            xaxis={'title': 'Historical records', },
+            xaxis={'title': 'Historical records'},
             yaxis={'title': 'Stock price [$]'},
             yaxis2={'title': 'Score [0-1]', 'overlaying': 'y', 'side': 'right', 'range': [0, 1]},
-            title={'text': 'Selection pending'}
+            title={'text': 'Selection pending'},
+            
             )
         }
     ),
+    html.Div([
     dcc.RangeSlider(id='range_slider',
     marks={i: '{}'.format(i) for i in range(s['time_range'][0][0], s['time_range'][1][0]+1)},
     min=s['time_range'][0][0],
     max=s['time_range'][1][0],
     value=[s['time_range'][0][0], s['time_range'][1][0]]
+    )], style={'width': '90%', 'padding-left': '5%', 'padding-right': '5%'}
     ), 
     
     dcc.Markdown('''
@@ -79,13 +82,15 @@ app.layout = html.Div(children=[
     dcc.Markdown('#### Differentiation methods'),
     dcc.Checklist(id='metrics',
         options=metric_options,
-        value=['diff_jaccard', 'diff_cosine_tf']
+        value=['diff_jaccard', 'diff_sk_cosine_tf_idf']
     ),
     
     dcc.Markdown('#### Apply your selection'),
     html.Label('Please enter a ticker'),
     dcc.Input(id='input_ticker', value='MHK', type='text'),
     html.Label(id='does_ticker_exist'),
+    
+    html.Div([
     dcc.Dropdown(id='index_name',
     options=[
         {'label': 'DJI', 'value': 'DJI'},
@@ -94,6 +99,7 @@ app.layout = html.Div(children=[
         {'label': 'SPX', 'value': 'SPX'}
     ],
     value='SPX'
+    )], style={'width': '30%'}
     ),
     html.Button('Submit', id='button'),
     
@@ -166,12 +172,28 @@ def update_display(input_button, tr, input_ticker, metrics, graph_figure, visual
 
 def update_company_view(input_ticker, metrics, graph_figure, tr):
     input_ticker = input_ticker.upper()
-    flag_ticker_exist = postgres.does_ticker_exist(connector, input_ticker)
+    flags = [False] * 3
+    # 1. Do we have this ticker in the stock_data?
+    flags[0] = postgres.does_ticker_exist(connector, input_ticker)
+    
+    # 2. Can we reverse lookup that ticker?
     try:  # Get the CIK corresponding to this ticker via SQL query
         cik = reverse_lookup[input_ticker]
+        flags[1] = True
     except KeyError:
-        flag_ticker_exist = False
-    if flag_ticker_exist:
+        pass
+    
+    # 3. Finally, do we have data for it in the cik_scores?
+    try:
+        cik_scores = postgres.retrieve_cik_scores(connector, cik, s)
+        for qtr in s['list_qtr'][s['lag']:]:
+            if len(cik_scores[cik][qtr]):
+                flags[2] = True
+                break
+    except:
+        pass
+    
+    if all(flags):  # Means it just exists in the lookup table
         user_message = "Ticker {} found in database. CIK: {}".format(input_ticker, cik)
         # print(user_message)
         
@@ -204,9 +226,9 @@ def update_company_view(input_ticker, metrics, graph_figure, tr):
             )
         }
         
-        metric_names = [m for m in s['metrics'] if m[:4] == 'diff']
-        for m in metric_names:  # Go through the requested metrics
-            position = metric_names.index(m)  
+        # metrics_name = [m for m in s['metrics'] if m[:4] == 'diff']
+        for m in metrics:  # Go through the requested metrics
+            position = metrics.index(m)  
             data = metric_data[position]
             x, y = zip(*data)
             #x = [matplotlib.dates.num2date(entry).date() for entry in x]

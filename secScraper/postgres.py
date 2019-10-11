@@ -219,8 +219,10 @@ def retrieve_cik_scores(connector, cik, s):
     data = cur.fetchall()
     #print(data)
     # Initialize
-    result = {cik: {qtr: {'total': {}} for qtr in s['list_qtr'][s['lag']:]}}
+    result = {cik: {qtr: {} for qtr in s['list_qtr'][s['lag']:]}}
     for e in data:
+        if len(result[cik][ast.literal_eval(e[2])]) == 0:
+            result[cik][ast.literal_eval(e[2])]['total'] = {}
         result[cik][ast.literal_eval(e[2])]['total'][e[3]] = e[4]
         result[cik][ast.literal_eval(e[2])]['0'] = {
             'type': e[5],
