@@ -58,7 +58,7 @@ Two main challenges arose:
 
 The results are stored in PostGres. The user interacts with the system via a Dash/Flask powered web app, available at:
 
-[https://www.sec-scraper.club/](sec-scraper.club) (Copy paste in browser if not re-directed)
+[sec-scraper.club](sec-scraper.club) (Copy paste in browser if not re-directed)
 
 WARNING: I generated the SSL keys myself, and nothing was certified by a third party so your browser might flag the connection as suspicious. But I just did not pay for a pro service here.
 
