@@ -4,11 +4,11 @@
 1. [Motivation](#motivation)
 2. [Pipeline](#pipeline)
 3. [Dataset](#dataset)
-4. [Conversion](#conversionn)
+4. [Conversion](#conversion)
 5. [Transformation](#transformation)
 6. [Database](#database)
 7. [Visualization](#visualization)
-8. [Notes](#notes-on-setting-the-environment)
+8. [Notes](#notes)
 
 ## Motivation
 
