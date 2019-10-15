@@ -32,6 +32,7 @@ The pipeline can be described by the following picture:
 
 ## Dataset
 A few datasets are used in this project:
+
 |Name of the dataset|Number of txt files|Total size (Gb)|
 |---|---|---|
 |SEC scraping|~1,000,000|2,500|
@@ -57,7 +58,7 @@ Two main challenges arose:
 
 The results are stored in PostGres. The user interacts with the system via a Dash/Flask powered web app, available at:
 
-sec-scraper.club
+[sec-scraper.club](sec-scraper.club)
 
 WARNING: I generated the SSL keys myself, and nothing was certified by a third party so your browser might flag the connection as suspicious. But I just did not pay for a pro service here.
 
@@ -78,6 +79,6 @@ Ideally, the portfolio are layered: Q5>Q4>Q3>Q2>Q1, which is most of the time th
 
 ## Notes
 ### What is EDGAR (from the SEC's website)?
-EDGAR is the Electronic Data Gathering, Analysis, and Retrieval system used at the U.S. Securities and Exchange Commission (SEC). EDGAR is the primary system for submissions by companies and others who are required by law to file information with the SEC. 
+[EDGAR](https://www.sec.gov/edgar/searchedgar/companysearch.html) is the Electronic Data Gathering, Analysis, and Retrieval system used at the U.S. Securities and Exchange Commission (SEC). EDGAR is the primary system for submissions by companies and others who are required by law to file information with the SEC. 
 
 Containing millions of company and individual filings, EDGAR benefits investors, corporations, and the U.S. economy overall by increasing the efficiency, transparency, and fairness of the securities markets. The system processes about 3,000 filings per day, serves up 3,000 terabytes of data to the public annually, and accommodates 40,000 new filers per year on average.
