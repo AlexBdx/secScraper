@@ -75,6 +75,11 @@ The company view shows the result of the metrics for a given ticker. Ideally, a 
 
 ![company_view](Pictures/company_view.png)
 
+However, the metrics seem to change a lot in the above picture. Why? Because there are two ways to compare reports:
+1. Quarterly comparisons, which means that twice a year a 10-K/10-Q comparison happens (that's what happens in the above picture).
+2. Yearly comparisons, which means that a 10-K is always compared to a 10-K & the same for 10-Qs.
+
+
 ### Portfolio view
 In the portfolio view, the company have been grouped by quintiles of similarity scores. Q1 is the portfolio of companies with the lowest similarity scores for a given metric, and Q5 the portfolio of companies with the highest similarity scores. Stocks are kept in the portfolio for one quarter, then all of them are sold, a tax is applied, and the new portfolio is purchased. 
 
