@@ -28,6 +28,7 @@ Available at SSRN: [https://ssrn.com/abstract=1658471](https://ssrn.com/abstract
 
 The pipeline can be described by the following picture:
 
+![pipeline](Pictures/pipeline.png)
 
 
 ## Dataset
@@ -72,10 +73,14 @@ The user interacts with the system via a web app. Two views are possible:
 ### Company view
 The company view shows the result of the metrics for a given ticker. Ideally, a correlation can be observed between quarter with high similarities scores and soaring stock price. Likewise, a negative correlation would be observed between low similarity scores and falling stock price.
 
+![company_view](Pictures/company_view.png)
+
 ### Portfolio view
 In the portfolio view, the company have been grouped by quintiles of similarity scores. Q1 is the portfolio of companies with the lowest similarity scores for a given metric, and Q5 the portfolio of companies with the highest similarity scores. Stocks are kept in the portfolio for one quarter, then all of them are sold, a tax is applied, and the new portfolio is purchased. 
 
 Ideally, the portfolio are layered: Q5>Q4>Q3>Q2>Q1, which is most of the time the case. Even better, we would like to see Q5 to beat the main market indices.
+
+![portfolio_view](Pictures/portfolio_view.png)
 
 ## Notes
 ### What is EDGAR (from the SEC's website)?
