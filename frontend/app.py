@@ -127,7 +127,7 @@ app.layout = html.Div(children=[
     
     dcc.Markdown('''
     #### Description
-    Investing strategies can be extremely complex. Using advanced mathematical models, investors try relentlessly to "Beat the Street" and gain on edge on each other. One piece of this puzzle are the 10-X filings that listed companies submit at the end of each quarter to report on their operations. They contain a wealth of quantitative information on their financial health.
+    Investing strategies can be extremely complex. Using advanced mathematical models, investors try relentlessly to "Beat the Street" and gain an edge on each other. One piece of this puzzle are the 10-X filings that listed companies submit at the end of each quarter to report on their operations. They contain a wealth of quantitative information on their financial health.
 
     Unfortunately, these 10-X have gotten longer and longer over time, which makes reading one a daunting task. From the boilerplate text to incomplete sections, their usefulness has substantially decreased. But has it?
 
