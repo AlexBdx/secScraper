@@ -17,11 +17,13 @@ In this project, I built a platform that parses public companies quarterly filin
 Furthermore, I formulate the hypothesis that **“No news, good news”**: companies that do not edit their filings from quarter to quarter outperform the market, while the ones that do see their stock value go down, as they were legally constrained to disclose bad news.
 
 
-Loosely based on:
+### Useful links
 
-Cohen, Lauren and Malloy, Christopher J. and Nguyen, Quoc, Lazy Prices (March 7, 2019). 2019 Academic Research Colloquium for Financial Planning and Related Disciplines.
+**Documentation:** [Read The Docs!](https://sec-scrapper.readthedocs.io/en/latest/)
 
-Available at SSRN: [https://ssrn.com/abstract=1658471](https://ssrn.com/abstract=1658471)
+**Tests:** [Tests](https://github.com/AlexBdx/secScraper/tree/master/tests)
+
+**Loosely based on:** Cohen, Lauren and Malloy, Christopher J. and Nguyen, Quoc, Lazy Prices (March 7, 2019). 2019 Academic Research Colloquium for Financial Planning and Related Disciplines, [https://ssrn.com/abstract=1658471](https://ssrn.com/abstract=1658471)
 
 
 ## Pipeline
