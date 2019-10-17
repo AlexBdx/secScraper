@@ -16,6 +16,9 @@ In this project, I built a platform that parses public companies quarterly filin
 
 Furthermore, I formulate the hypothesis that **“No news, good news”**: companies that do not edit their filings from quarter to quarter outperform the market, while the ones that do see their stock value go down, as they were legally constrained to disclose bad news.
 
+Documentation is available at: [https://sec-scrapper.readthedocs.io/en/latest/](https://sec-scrapper.readthedocs.io/en/latest/)
+
+Tests are available at: [https://github.com/AlexBdx/secScraper/tree/master/tests](https://github.com/AlexBdx/secScraper/tree/master/tests)
 
 Loosely based on:
 
