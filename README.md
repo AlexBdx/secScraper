@@ -21,7 +21,7 @@ Furthermore, I formulate the hypothesis that **“No news, good news”**: compa
 
 **Documentation:** [Read The Docs!](https://sec-scrapper.readthedocs.io/en/latest/)
 
-**Tests:** [Tests](https://github.com/AlexBdx/secScraper/tree/master/tests)**
+**Tests:** [Tests](https://github.com/AlexBdx/secScraper/tree/master/tests)
 
 **Loosely based on:** Cohen, Lauren and Malloy, Christopher J. and Nguyen, Quoc, Lazy Prices (March 7, 2019). 2019 Academic Research Colloquium for Financial Planning and Related Disciplines, [https://ssrn.com/abstract=1658471](https://ssrn.com/abstract=1658471)
 
