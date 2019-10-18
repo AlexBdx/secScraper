@@ -19,6 +19,8 @@ Furthermore, I formulate the hypothesis that **“No news, good news”**: compa
 
 ### Useful links
 
+**Web app/UI:** [sec-scraper.club](sec-scraper.club) (Security warning are due to self-signed SSL keys for the HTTPS connection)
+
 **Documentation:** [Read The Docs!](https://sec-scrapper.readthedocs.io/en/latest/)
 
 **Tests:** [Tests](https://github.com/AlexBdx/secScraper/tree/master/tests)
